@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -39,6 +42,21 @@ public class UserController {
         users.put(user.getId(), user);
         log.info("user with id={} updated successfully", user.getId());
         return user;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public String handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors()
+                .forEach(error -> {
+                    String fieldName = ((FieldError) error).getField();
+                    String errorMessage = "поле '" + fieldName + "' " +
+                            error.getDefaultMessage();
+                    errors.put(fieldName, errorMessage);
+                });
+        log.warn(errors.values().toString());
+        return errors.values().toString();
     }
 
     Integer initId() {
