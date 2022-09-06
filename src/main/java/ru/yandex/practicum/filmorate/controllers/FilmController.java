@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.FilmValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
@@ -25,25 +23,18 @@ public class FilmController {
         return new ArrayList<>(films.values());
     }
 
-    @SneakyThrows
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new FilmValidationException();
-        }
         film.setId(initId());
         films.put(film.getId(), film);
+        log.info("film with id={} created successfully", film.getId());
         return film;
     }
 
-    @SneakyThrows
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))
-                || film.getId() < 0) {
-            throw new FilmValidationException();
-        }
         films.put(film.getId(), film);
+        log.info("film with id={} updated successfully", film.getId());
         return film;
     }
 

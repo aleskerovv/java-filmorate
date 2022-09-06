@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
@@ -24,7 +22,6 @@ public class UserController {
         return new ArrayList<>(users.values());
     }
 
-    @SneakyThrows
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
         if (user.getName() == null) {
@@ -33,20 +30,18 @@ public class UserController {
 
         user.setId(initId());
         users.put(user.getId(), user);
+        log.info("user with id={} created successfully", user.getId());
         return user;
     }
 
-    @SneakyThrows
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        if (user.getId() < 0) {
-            throw new UserValidationException();
-        }
         users.put(user.getId(), user);
+        log.info("user with id={} updated successfully", user.getId());
         return user;
     }
 
-    private Integer initId() {
+    Integer initId() {
         List<Integer> idList = getUsers().stream()
                 .map(User::getId)
                 .sorted()

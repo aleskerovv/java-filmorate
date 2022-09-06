@@ -1,18 +1,15 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 @Data
 @Builder
-@RequiredArgsConstructor
-@AllArgsConstructor
 public class User {
+    @PositiveOrZero
     private int id;
     @NotNull
     @Email

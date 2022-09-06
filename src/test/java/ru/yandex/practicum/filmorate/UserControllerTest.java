@@ -1,61 +1,163 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controllers.UserController;
-import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@WebMvcTest
 class UserControllerTest {
-    UserController uc = new UserController();
-    static User user;
-    static User userWithNegativeId;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    UserController uc;
 
-    @BeforeEach
-    void createBefore() {
-        user = User.builder()
+    @Test
+    void creates_newUser_andStatusIs200() throws Exception {
+        User user = User.builder()
                 .name("asd")
                 .email("asd@mail.ru")
                 .login("logIn")
                 .birthday(LocalDate.now())
                 .build();
-        userWithNegativeId = User.builder()
-                .id(-1)
-                .name("user")
-                .email("asd@mail,ru")
-                .login("asdasd")
+
+        mockMvc.perform(
+                        post("/users")
+                                .content(objectMapper.writeValueAsString(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().is(200));
+    }
+
+    @Test
+    void updates_presentedUser_inUsersList_andStatusIs200() throws Exception {
+        User u = User.builder()
+                .name("asd")
+                .email("asd@mail.ru")
+                .login("logIn")
                 .birthday(LocalDate.now())
                 .build();
+
+        User u2 = User.builder()
+                .id(1)
+                .name("updatedUser")
+                .email("asd@mail.ru")
+                .login("logIn")
+                .birthday(LocalDate.now())
+                .build();
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        mockMvc.perform(
+                        put("/users")
+                                .content(objectMapper.writeValueAsString(u2))
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().is(200))
+                .andExpect(content().json(objectMapper.writeValueAsString(u2)));
+
+        mockMvc.perform(
+                        get("/users"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(Arrays.asList(u2))));
     }
 
     @Test
-    void create() {
-        uc.createUser(user);
-        user.setId(1);
-        assertEquals(uc.getUsers().get(0), user);
+    void when_User_loginIsEmpty_statusIs400() throws Exception {
+        User u1 = User.builder()
+                .email("asd@mail.ru")
+                .birthday(LocalDate.now())
+                .build();
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(400));
     }
 
     @Test
-    void checkThrowableWhenIdIsNegative() {
-        Throwable exception = assertThrows(UserValidationException.class, () -> uc.updateUser(userWithNegativeId));
+    void when_User_emailIsNotCorrect_statusIs400() throws Exception {
+        User u1 = User.builder()
+                .login("testUser")
+                .email("asdmail.ru")
+                .birthday(LocalDate.now())
+                .build();
 
-        assertEquals(null, exception.getMessage());
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(400));
     }
 
     @Test
-    void checkUserListNotNull() {
-        uc.createUser(user);
-        user.setId(1);
-        List<User> users = List.of(user);
+    void when_User_birthdayIsInFuture_statusIs400() throws Exception {
+        User u1 = User.builder()
+                .login("testUser")
+                .email("asd@mail.ru")
+                .birthday(LocalDate.of(2023, 12, 22))
+                .build();
 
-        assertEquals(1, users.size());
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(400));
+    }
+
+    @Test
+    void when_User_idIsNegative_statusIs400() throws Exception {
+        User u1 = User.builder()
+                .id(-1)
+                .login("testUser")
+                .email("asd@mail.ru")
+                .birthday(LocalDate.now())
+                .build();
+
+        mockMvc.perform(
+                put("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(400));
+    }
+
+    @Test
+    void checkUserListNotNull() throws Exception {
+        User u1 = User.builder()
+                .name("asd")
+                .email("asd@mail.ru")
+                .login("logIn")
+                .birthday(LocalDate.now())
+                .build();
+
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        mockMvc.perform(
+                        get("/users"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(Optional.of(uc.getUsers()))));
     }
 }
