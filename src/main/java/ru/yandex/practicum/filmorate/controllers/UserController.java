@@ -64,6 +64,13 @@ public class UserController {
         return errors.values().toString();
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(UserValidationException.class)
+    public String handleCustomValidationExceptions(
+            UserValidationException ex) {
+        return ex.getMessage();
+    }
+
     Integer initId() {
         List<Integer> idList = getUsers().stream()
                 .map(User::getId)

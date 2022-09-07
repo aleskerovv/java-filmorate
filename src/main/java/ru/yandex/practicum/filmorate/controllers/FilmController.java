@@ -60,6 +60,13 @@ public class FilmController {
         return errors.values().toString();
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(FilmValidationException.class)
+    public String handleCustomValidationExceptions(
+            FilmValidationException ex) {
+        return ex.getMessage();
+    }
+
     private Integer initId() {
         List<Integer> idList = getFilms().stream()
                 .map(Film::getId)
