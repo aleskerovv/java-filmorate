@@ -6,16 +6,15 @@ import org.hibernate.validator.constraints.Length;
 import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDate;
 
 @Data
 @Builder
 public class Film {
-    @PositiveOrZero
+    @PositiveOrZero(message = "must be positive")
     private int id;
-    @NotNull @NotBlank
+    @NotBlank
     private String name;
     @Length(min = 1, max = 200)
     private String description;

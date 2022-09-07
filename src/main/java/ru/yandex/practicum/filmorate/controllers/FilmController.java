@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.FilmValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
@@ -35,6 +36,10 @@ public class FilmController {
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
+        if (!films.containsKey(film.getId())) {
+            log.info("film with id={} not found", film.getId());
+            throw new FilmValidationException(String.format("film with id=%d not found", film.getId()));
+        }
         films.put(film.getId(), film);
         log.info("film with id={} updated successfully", film.getId());
         return film;

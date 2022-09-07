@@ -1,18 +1,21 @@
 package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controllers.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -89,7 +92,11 @@ class UserControllerTest {
                 post("/users")
                         .content(objectMapper.writeValueAsString(u1))
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(400));
+        ).andExpect(status().isBadRequest())
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(result -> assertEquals("[field 'login' must not be blank]",
+                        result.getResponse().getContentAsString()));
     }
 
     @Test
@@ -104,7 +111,11 @@ class UserControllerTest {
                 post("/users")
                         .content(objectMapper.writeValueAsString(u1))
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(400));
+        ).andExpect(status().isBadRequest())
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(result -> assertEquals("[field 'email' must be a well-formed email address]",
+                        result.getResponse().getContentAsString()));
     }
 
     @Test
@@ -119,7 +130,11 @@ class UserControllerTest {
                 post("/users")
                         .content(objectMapper.writeValueAsString(u1))
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(400));
+        ).andExpect(status().isBadRequest())
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(result -> assertEquals("[field 'birthday' must be a date in the past or in the present]",
+                        result.getResponse().getContentAsString()));
     }
 
     @Test
@@ -135,13 +150,18 @@ class UserControllerTest {
                 put("/users")
                         .content(objectMapper.writeValueAsString(u1))
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(400));
+        ).andExpect(status().isBadRequest())
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(result -> assertEquals("[field 'id' must be positive]",
+                        result.getResponse().getContentAsString()));
     }
 
     @Test
     void checkUserListNotNull() throws Exception {
         User u1 = User.builder()
-                .name("asd")
+                .id(1)
+                .name("updatedUser")
                 .email("asd@mail.ru")
                 .login("logIn")
                 .birthday(LocalDate.now())
@@ -149,7 +169,7 @@ class UserControllerTest {
 
 
         mockMvc.perform(
-                post("/users")
+                put("/users")
                         .content(objectMapper.writeValueAsString(u1))
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().is(200));
@@ -157,6 +177,6 @@ class UserControllerTest {
         mockMvc.perform(
                         get("/users"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(Optional.of(uc.getUsers()))));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(u1))));
     }
 }

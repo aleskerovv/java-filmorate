@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
@@ -39,6 +40,10 @@ public class UserController {
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
+        if (!users.containsKey(user.getId())) {
+            log.info("user with id={} not found", user.getId());
+            throw new UserValidationException(String.format("user with id=%d not found", user.getId()));
+        }
         users.put(user.getId(), user);
         log.info("user with id={} updated successfully", user.getId());
         return user;
@@ -51,7 +56,7 @@ public class UserController {
         ex.getBindingResult().getAllErrors()
                 .forEach(error -> {
                     String fieldName = ((FieldError) error).getField();
-                    String errorMessage = "поле '" + fieldName + "' " +
+                    String errorMessage = "field '" + fieldName + "' " +
                             error.getDefaultMessage();
                     errors.put(fieldName, errorMessage);
                 });

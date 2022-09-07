@@ -9,12 +9,11 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class User {
-    @PositiveOrZero
+    @PositiveOrZero(message = "must be positive")
     private int id;
     @NotNull
     @Email
     private String email;
-    @NotNull
     @NotBlank
     private String login;
     private String name;
