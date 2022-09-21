@@ -41,7 +41,7 @@ public class UserController {
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
         if (!users.containsKey(user.getId())) {
-            log.info("user with id={} not found", user.getId());
+            log.error("user with id={} not found", user.getId());
             throw new UserValidationException(String.format("user with id=%d not found", user.getId()));
         }
         users.put(user.getId(), user);
