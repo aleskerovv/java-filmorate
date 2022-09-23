@@ -43,7 +43,7 @@ public class InMemoryFilmStorage implements FilmStorage{
     @Override
     public Film updateFilm(Film film) {
         if (film.getId() < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
+            throw new NotFoundException("id", "must be positive");
         }
         if (!films.containsKey(film.getId())) {
             throw new NotFoundException("id", String.format("film with id=%d not found", film.getId()));

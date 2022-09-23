@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -94,7 +95,7 @@ class FilmControllerTest {
                 ).andExpect(status().isBadRequest())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
                         instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.name").value("must not be blank"));
+                .andExpect(jsonPath("$.name").value("can not be blank"));
     }
 
     @Test
@@ -164,9 +165,9 @@ class FilmControllerTest {
                         put("/films")
                                 .content(objectMapper.writeValueAsString(f))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isBadRequest())
+                ).andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof MethodArgumentNotValidException))
+                        instanceof NotFoundException))
                 .andExpect(jsonPath("$.id").value("must be positive"));
     }
 

@@ -53,13 +53,4 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         return "An unexpected error has occurred";
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(IllegalArgumentException.class)
-    protected ResponseEntity<Object> handleIllegalArgumentException(final IllegalArgumentException ex) {
-        log.error(ex.getMessage());
-        List<String> errors = new ArrayList<>();
-        errors.add(ex.getMessage());
-        return new ResponseEntity<>(errors, HttpHeaders.EMPTY, HttpStatus.NOT_FOUND);
-    }
-
 }

@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -147,10 +148,10 @@ class UserControllerTest {
                         put("/users")
                                 .content(objectMapper.writeValueAsString(u1))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isBadRequest())
+                ).andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.id").value("must be positive"));
+                        instanceof NotFoundException))
+                .andExpect(jsonPath("$.id").value("cannot be negative"));
     }
 
     @Test

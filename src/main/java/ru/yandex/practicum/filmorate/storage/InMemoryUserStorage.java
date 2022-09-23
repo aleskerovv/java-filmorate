@@ -44,7 +44,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User updateUser(User user) {
         if (user.getId() < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
+            throw new NotFoundException("id", "cannot be negative");
         }
         if (!users.containsKey(user.getId())) {
             throw new NotFoundException("id", String.format("user with id=%d not found", user.getId()));

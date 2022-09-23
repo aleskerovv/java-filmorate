@@ -18,7 +18,7 @@ public class Film {
     private int id;
     @NotBlank(message = "can not be blank")
     private String name;
-    @Length(min = 1, max = 200, message = "length must be from 1 to 200")
+    @Length(min = 1, max = 200, message = "length must be between 1 and 200")
     private String description;
     @CorrectReleaseDay(message = "must be after 28-DEC-1895")
     private LocalDate releaseDate;
