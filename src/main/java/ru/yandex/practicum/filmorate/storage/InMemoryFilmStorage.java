@@ -5,27 +5,21 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class InMemoryFilmStorage implements FilmStorage{
+public class InMemoryFilmStorage implements EntityStorage<Film> {
     private final Map<Integer, Film> films = new HashMap<>();
 
-    public InMemoryFilmStorage() {
-    }
-
     @Override
-    public List<Film> getFilms() {
+    public List<Film> getAll() {
         return new ArrayList<>(films.values());
     }
 
     @Override
-    public Film findFilmById(Integer id) {
+    public Film findById(Integer id) {
         if (!films.containsKey(id)) {
             throw new NotFoundException("id", String.format("film with id=%d not found", id));
         }
@@ -33,24 +27,24 @@ public class InMemoryFilmStorage implements FilmStorage{
     }
 
     @Override
-    public Film createFilm(Film film) {
+    public Film create(Film film) {
         film.setId(initId());
         films.put(film.getId(), film);
-        log.info("film with id={} created successfully", film.getId());
+        log.info("film with id={} was created", film.getId());
         return film;
     }
 
     @Override
-    public Film updateFilm(Film film) {
+    public Film update(Film film) {
         if (film.getId() < 0) {
-            throw new NotFoundException("id", "must be positive");
+            throw new IllegalArgumentException("id must be positive");
         }
         if (!films.containsKey(film.getId())) {
             throw new NotFoundException("id", String.format("film with id=%d not found", film.getId()));
         }
 
         films.put(film.getId(), film);
-        log.info("film with id={} updated successfully", film.getId());
+        log.info("film with id={} was updated", film.getId());
         return film;
     }
 
@@ -60,7 +54,7 @@ public class InMemoryFilmStorage implements FilmStorage{
     }
 
     private Integer initId() {
-        List<Integer> idList = getFilms().stream()
+        List<Integer> idList = getAll().stream()
                 .map(Film::getId)
                 .sorted()
                 .collect(Collectors.toList());

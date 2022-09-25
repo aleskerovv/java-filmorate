@@ -13,9 +13,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -24,12 +22,20 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
-    protected ResponseEntity<Object> handleResourceNotFoundException(
+    protected Map<String, String> handleResourceNotFoundException(
             NotFoundException ex) {
         log.error(ex.getMessage());
         Map<String, String> errors = new HashMap<>();
         errors.put(ex.getParameter(), ex.getMessage());
-        return new ResponseEntity<>(errors, HttpHeaders.EMPTY, HttpStatus.NOT_FOUND);
+        return errors;
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected String handleResourceNotFoundException(
+            IllegalArgumentException ex) {
+        log.error(ex.getMessage());
+        return ex.getMessage();
     }
 
     @Override
@@ -48,8 +54,8 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler
-    protected String handleThrowable(final Throwable ex) {
+    @ExceptionHandler({Throwable.class})
+    protected String handleThrowable() {
         return "An unexpected error has occurred";
     }
 

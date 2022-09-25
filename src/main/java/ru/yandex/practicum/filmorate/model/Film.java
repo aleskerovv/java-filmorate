@@ -25,4 +25,12 @@ public class Film {
     @PositiveOrZero(message = "duration can not be negative")
     private int duration;
     private Set<Integer> likes = new HashSet<>();
+
+    public void addLike(Integer id) {
+        likes.add(id);
+    }
+
+    public void deleteLike(Integer id) {
+        likes.remove(id);
+    }
 }

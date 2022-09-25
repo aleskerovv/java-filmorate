@@ -13,16 +13,16 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class InMemoryUserStorage implements UserStorage {
+public class InMemoryUserStorage implements EntityStorage<User> {
     private final Map<Integer, User> users = new HashMap<>();
 
     @Override
-    public List<User> getUsers() {
+    public List<User> getAll() {
         return new ArrayList<>(users.values());
     }
 
     @Override
-    public User findUserById(Integer id) {
+    public User findById(Integer id) {
         if (!users.containsKey(id)) {
             throw new NotFoundException("id", String.format("User with id=%d not found", id));
         }
@@ -30,27 +30,27 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User createUser(User user) {
+    public User create(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
 
         user.setId(initId());
         users.put(user.getId(), user);
-        log.info("user with id={} created successfully", user.getId());
+        log.info("user with id={} was created", user.getId());
         return user;
     }
 
     @Override
-    public User updateUser(User user) {
+    public User update(User user) {
         if (user.getId() < 0) {
-            throw new NotFoundException("id", "cannot be negative");
+            throw new IllegalArgumentException("id cannot be negative");
         }
         if (!users.containsKey(user.getId())) {
             throw new NotFoundException("id", String.format("user with id=%d not found", user.getId()));
         }
         users.put(user.getId(), user);
-        log.info("user with id={} updated successfully", user.getId());
+        log.info("user with id={} was updated", user.getId());
         return user;
     }
 
@@ -60,7 +60,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     private Integer initId() {
-        List<Integer> idList = getUsers().stream()
+        List<Integer> idList = getAll().stream()
                 .map(User::getId)
                 .sorted()
                 .collect(Collectors.toList());

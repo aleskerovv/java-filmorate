@@ -10,15 +10,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.EntityStorage;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,7 +30,7 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private UserStorage userStorage;
+    private EntityStorage<User> userStorage;
 
     @BeforeEach
     void clear() {
@@ -150,8 +150,9 @@ class UserControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof NotFoundException))
-                .andExpect(jsonPath("$.id").value("cannot be negative"));
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("id cannot be negative",
+                        result.getResponse().getContentAsString()));
     }
 
     @Test

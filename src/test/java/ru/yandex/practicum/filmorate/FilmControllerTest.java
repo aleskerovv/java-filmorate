@@ -10,15 +10,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.EntityStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,7 +31,7 @@ class FilmControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private FilmStorage filmStorage;
+    private EntityStorage<Film> filmStorage;
 
     @BeforeEach
     void clear() {
@@ -167,8 +168,9 @@ class FilmControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof NotFoundException))
-                .andExpect(jsonPath("$.id").value("must be positive"));
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("id must be positive",
+                        result.getResponse().getContentAsString()));
     }
 
     @Test
@@ -195,11 +197,22 @@ class FilmControllerTest {
 
     @Test
     void addLikeToFilm_AndLikesCountIs1() throws Exception {
+        User u1 = new User();
+        u1.setName("updatedUser");
+        u1.setEmail("asd@mail.ru");
+        u1.setLogin("logIn");
+        u1.setBirthday(LocalDate.now());
         Film f = new Film();
         f.setName("New film upd");
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
 
         mockMvc.perform(
                 post("/films")
@@ -217,11 +230,23 @@ class FilmControllerTest {
 
     @Test
     void deleteLikes_andLikesCountIs0() throws Exception {
+        User u1 = new User();
+        u1.setName("updatedUser");
+        u1.setEmail("asd@mail.ru");
+        u1.setLogin("logIn");
+        u1.setBirthday(LocalDate.now());
+
         Film f = new Film();
         f.setName("New film upd");
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
 
         mockMvc.perform(
                 post("/films")
@@ -295,6 +320,12 @@ class FilmControllerTest {
 
     @Test
     void getFilmsTopSortedByLikes() throws Exception {
+        User u1 = new User();
+        u1.setName("updatedUser");
+        u1.setEmail("asd@mail.ru");
+        u1.setLogin("logIn");
+        u1.setBirthday(LocalDate.now());
+
         Film f = new Film();
         f.setName("New film upd");
         f.setDescription("Desc of new film");
@@ -312,6 +343,12 @@ class FilmControllerTest {
         f3.setDescription("Desc of new film");
         f3.setReleaseDate(LocalDate.now());
         f3.setDuration(25);
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
 
         mockMvc.perform(
                 post("/films")
@@ -341,7 +378,7 @@ class FilmControllerTest {
 
         mockMvc.perform(put("/films/3/like/1"))
                 .andExpect(status().isOk());
-        f3.getLikes().add(1);
+        f3.addLike(1);
         mockMvc.perform(get("/films/popular?count=2"))
                 .andExpect(jsonPath("$.*", hasSize(2)))
                 .andExpect(content().json(objectMapper.writeValueAsString(List.of(f3, f))));
