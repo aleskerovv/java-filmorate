@@ -1,13 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Builder;
 import lombok.Data;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.annotations.CorrectLogin;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
-@Builder
+@Component
 public class User {
     @PositiveOrZero(message = "must be positive")
     private int id;
@@ -15,8 +18,18 @@ public class User {
     @Email
     private String email;
     @NotBlank
+    @CorrectLogin
     private String login;
     private String name;
     @PastOrPresent
     private LocalDate birthday;
+    private Set<Integer> friends = new HashSet<>();
+
+    public void addFriend(Integer id) {
+        friends.add(id);
+    }
+
+    public void deleteFriend(Integer id) {
+        friends.remove(id);
+    }
 }

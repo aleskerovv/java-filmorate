@@ -2,38 +2,49 @@ package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.EntityStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest
+@SpringBootTest
+@AutoConfigureMockMvc
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private EntityStorage<Film> filmStorage;
+
+    @BeforeEach
+    void clear() {
+        filmStorage.deleteAll();
+    }
 
     @Test
     void creates_newFilm_andStatusIs200() throws Exception {
-        Film f = Film.builder()
-                .name("New film")
-                .description("Desc of new film")
-                .releaseDate(LocalDate.now())
-                .duration(50)
-                .build();
+        Film f = new Film();
+        f.setName("New film");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(50);
 
 
         mockMvc.perform(
@@ -45,19 +56,17 @@ class FilmControllerTest {
 
     @Test
     void updates_presentedFilm_andStatusIs200() throws Exception {
-        Film f = Film.builder()
-                .name("New film")
-                .description("Desc of new film")
-                .releaseDate(LocalDate.now())
-                .duration(50)
-                .build();
-        Film f2 = Film.builder()
-                .id(1)
-                .name("New film upd")
-                .description("Desc of new film")
-                .releaseDate(LocalDate.now())
-                .duration(25)
-                .build();
+        Film f = new Film();
+        f.setName("New film");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(50);
+        Film f2 = new Film();
+        f2.setId(1);
+        f2.setName("New film upd");
+        f2.setDescription("Desc of new film");
+        f2.setReleaseDate(LocalDate.now());
+        f2.setDuration(25);
 
         mockMvc.perform(
                 post("/films")
@@ -75,51 +84,10 @@ class FilmControllerTest {
 
     @Test
     void when_Films_nameIsEmpty_andStatusIs400() throws Exception {
-        Film f = Film.builder()
-                .description("Desc of new film")
-                .releaseDate(LocalDate.now())
-                .duration(50)
-                .build();
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof MethodArgumentNotValidException))
-                .andExpect(result -> assertEquals("[field 'name' must not be blank]",
-                        result.getResponse().getContentAsString()));
-    }
-
-    @Test
-    void when_FilmsDescription_lengthIsAbove200_andStatusIs400() throws Exception {
-        Film f = Film.builder()
-                .name("Test film")
-                .description("l".repeat(250))
-                .releaseDate(LocalDate.now())
-                .duration(50)
-                .build();
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof MethodArgumentNotValidException))
-                .andExpect(result -> assertEquals("[field 'description' length must be between 1 and 200]",
-                        result.getResponse().getContentAsString()));
-    }
-
-    @Test
-    void when_FilmsReleaseDate_isBeforeCinemaBirthday_andStatusIs400() throws Exception {
-        Film f = Film.builder()
-                .name("Test film")
-                .description("desc")
-                .releaseDate(LocalDate.of(1800, Month.DECEMBER, 1))
-                .duration(50)
-                .build();
+        Film f = new Film();
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(50);
 
         mockMvc.perform(
                         post("/films")
@@ -128,72 +96,311 @@ class FilmControllerTest {
                 ).andExpect(status().isBadRequest())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
                         instanceof MethodArgumentNotValidException))
-                .andExpect(result -> assertEquals("[field 'releaseDate' must be after 28-DEC-1895]",
-                        result.getResponse().getContentAsString()));
+                .andExpect(jsonPath("$.name").value("can not be blank"));
+    }
+
+    @Test
+    void when_FilmsDescription_lengthIsAbove200_andStatusIs400() throws Exception {
+        Film f = new Film();
+        f.setName("Test film");
+        f.setDescription("l".repeat(250));
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(50);
+
+        mockMvc.perform(
+                        post("/films")
+                                .content(objectMapper.writeValueAsString(f))
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().isBadRequest())
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(jsonPath("$.description").value("length must be between 1 and 200"));
+    }
+
+    @Test
+    void when_FilmsReleaseDate_isBeforeCinemaBirthday_andStatusIs400() throws Exception {
+        Film f = new Film();
+        f.setName("Test film");
+        f.setDescription("desc");
+        f.setReleaseDate(LocalDate.of(1800, Month.DECEMBER, 1));
+        f.setDuration(50);
+
+        mockMvc.perform(
+                        post("/films")
+                                .content(objectMapper.writeValueAsString(f))
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().isBadRequest())
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(jsonPath("$.releaseDate").value("must be after 28-DEC-1895"));
     }
 
     @Test
     void when_FilmsDuration_isNegative_andStatusIs400() throws Exception {
-        Film f = Film.builder()
-                .name("Test film")
-                .description("desc")
-                .releaseDate(LocalDate.now())
-                .duration(-50)
-                .build();
+        Film f = new Film();
+        f.setName("Test film");
+        f.setDescription("desc");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(-50);
 
         mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest())
+                        post("/films")
+                                .content(objectMapper.writeValueAsString(f))
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().isBadRequest())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
                         instanceof MethodArgumentNotValidException))
-                .andExpect(result -> assertEquals("[field 'duration' duration can not be negative]",
-                        result.getResponse().getContentAsString()));
+                .andExpect(jsonPath("$.duration").value("duration can not be negative"));
     }
 
     @Test
     void when_FilmsId_isNegative_andStatusIs400() throws Exception {
-        Film f = Film.builder()
-                .id(-1)
-                .name("Test film")
-                .description("test desc")
-                .releaseDate(LocalDate.now())
-                .duration(50)
-                .build();
+        Film f = new Film();
+        f.setId(-1);
+        f.setName("Test film");
+        f.setDescription("test desc");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(50);
 
         mockMvc.perform(
-                put("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isBadRequest())
+                        put("/films")
+                                .content(objectMapper.writeValueAsString(f))
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof MethodArgumentNotValidException))
-                .andExpect(result -> assertEquals("[field 'id' must be positive]",
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("id must be positive",
                         result.getResponse().getContentAsString()));
     }
 
     @Test
     void films_ListIsNotEmpty_andStatusIs200() throws Exception {
-        Film f = Film.builder()
-                .id(1)
-                .name("New film upd")
-                .description("Desc of new film")
-                .releaseDate(LocalDate.now())
-                .duration(25)
-                .build();
+        Film f = new Film();
+        f.setName("New film upd");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(25);
 
         mockMvc.perform(
-                put("/films")
+                post("/films")
                         .content(objectMapper.writeValueAsString(f))
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().is(200));
+
+        f.setId(1);
 
         mockMvc.perform(
                         get("/films"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(List.of(f))));
-
     }
 
+    @Test
+    void addLikeToFilm_AndLikesCountIs1() throws Exception {
+        User u1 = new User();
+        u1.setName("updatedUser");
+        u1.setEmail("asd@mail.ru");
+        u1.setLogin("logIn");
+        u1.setBirthday(LocalDate.now());
+        Film f = new Film();
+        f.setName("New film upd");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(25);
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f.setId(1);
+
+        mockMvc.perform(put("/films/1/like/1"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/films/1"))
+                .andExpect(jsonPath("$.likes", hasSize(1)));
+    }
+
+    @Test
+    void deleteLikes_andLikesCountIs0() throws Exception {
+        User u1 = new User();
+        u1.setName("updatedUser");
+        u1.setEmail("asd@mail.ru");
+        u1.setLogin("logIn");
+        u1.setBirthday(LocalDate.now());
+
+        Film f = new Film();
+        f.setName("New film upd");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(25);
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f.setId(1);
+
+        mockMvc.perform(put("/films/1/like/1"));
+        mockMvc.perform(delete("/films/1/like/1"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/films/1"))
+                .andExpect(jsonPath("$.likes", hasSize(0)));
+    }
+
+
+    @Test
+    void addLikeToFilm_whichNotPresent() throws Exception {
+        mockMvc.perform(put("/films/1/like/1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getTop2Film() throws Exception {
+        Film f = new Film();
+        f.setName("New film upd");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(25);
+
+        Film f2 = new Film();
+        f2.setName("New f2ilm upd");
+        f2.setDescription("Desc of2 new f2ilm");
+        f2.setReleaseDate(LocalDate.now());
+        f2.setDuration(25);
+
+        Film f3 = new Film();
+        f3.setName("New film upd");
+        f3.setDescription("Desc of new film");
+        f3.setReleaseDate(LocalDate.now());
+        f3.setDuration(25);
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f.setId(1);
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f2))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f2.setId(2);
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f3))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f3.setId(3);
+
+        mockMvc.perform(get("/films/popular?count=2"))
+                .andExpect(jsonPath("$.*", hasSize(2)));
+    }
+
+    @Test
+    void getFilmsTopSortedByLikes() throws Exception {
+        User u1 = new User();
+        u1.setName("updatedUser");
+        u1.setEmail("asd@mail.ru");
+        u1.setLogin("logIn");
+        u1.setBirthday(LocalDate.now());
+
+        Film f = new Film();
+        f.setName("New film upd");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(25);
+
+        Film f2 = new Film();
+        f2.setName("New f2ilm upd");
+        f2.setDescription("Desc of2 new f2ilm");
+        f2.setReleaseDate(LocalDate.now());
+        f2.setDuration(25);
+
+        Film f3 = new Film();
+        f3.setName("New film upd");
+        f3.setDescription("Desc of new film");
+        f3.setReleaseDate(LocalDate.now());
+        f3.setDuration(25);
+
+        mockMvc.perform(
+                post("/users")
+                        .content(objectMapper.writeValueAsString(u1))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f.setId(1);
+
+
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f2))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f2.setId(2);
+
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f3))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        f3.setId(3);
+
+        mockMvc.perform(put("/films/3/like/1"))
+                .andExpect(status().isOk());
+        f3.addLike(1);
+        mockMvc.perform(get("/films/popular?count=2"))
+                .andExpect(jsonPath("$.*", hasSize(2)))
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(f3, f))));
+    }
+
+    @Test
+    void deleteAllFilms() throws Exception {
+        Film f = new Film();
+        f.setName("New film upd");
+        f.setDescription("Desc of new film");
+        f.setReleaseDate(LocalDate.now());
+        f.setDuration(25);
+        mockMvc.perform(
+                post("/films")
+                        .content(objectMapper.writeValueAsString(f))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is(200));
+
+        mockMvc.perform(delete("/films"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/films"))
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of())));
+
+    }
 }

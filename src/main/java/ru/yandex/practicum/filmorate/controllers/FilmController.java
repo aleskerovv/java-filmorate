@@ -1,81 +1,60 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.FilmValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/films")
-@Slf4j
 public class FilmController {
-    private final Map<Integer, Film> films = new HashMap<>();
+    private final FilmService filmService;
+
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @GetMapping
     public List<Film> getFilms() {
-        return new ArrayList<>(films.values());
+        return filmService.getAllFilms();
+    }
+
+    @GetMapping("/{id}")
+    public Film findById(@PathVariable Integer id) {
+        return filmService.findFilmById(id);
     }
 
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
-        film.setId(initId());
-        films.put(film.getId(), film);
-        log.info("film with id={} created successfully", film.getId());
-        return film;
+        return filmService.createFilm(film);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        if (!films.containsKey(film.getId())) {
-            log.error("film with id={} not found", film.getId());
-            throw new FilmValidationException(String.format("film with id=%d not found", film.getId()));
-        }
-        films.put(film.getId(), film);
-        log.info("film with id={} updated successfully", film.getId());
-        return film;
+    public Film updateFilm(@RequestBody Film film) {
+        return filmService.updateFilm(film);
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public String handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors()
-                .forEach(error -> {
-                    String fieldName = ((FieldError) error).getField();
-                    String errorMessage = "field '" + fieldName + "' " +
-                            error.getDefaultMessage();
-                    errors.put(fieldName, errorMessage);
-                });
-        log.warn(errors.values().toString());
-        return errors.values().toString();
+    @PutMapping("/{filmId}/like/{userId}")
+    public void addLike(@PathVariable Integer filmId, @PathVariable Integer userId) {
+        filmService.addLike(filmId, userId);
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(FilmValidationException.class)
-    public String handleCustomValidationExceptions(
-            FilmValidationException ex) {
-        return ex.getMessage();
+    @DeleteMapping("/{filmId}/like/{userId}")
+    public void deleteLike(@PathVariable Integer filmId, @PathVariable Integer userId) {
+        filmService.deleteLike(filmId, userId);
     }
 
-    private Integer initId() {
-        List<Integer> idList = getFilms().stream()
-                .map(Film::getId)
-                .sorted()
-                .collect(Collectors.toList());
+    @GetMapping("/popular")
+    public List<Film> getFilmsTop(@RequestParam(value = "count", defaultValue = "10", required = false) Integer count) {
+        return filmService.getFilmsTop(count);
+    }
 
-        if (films.isEmpty()) {
-            return 1;
-        }
-        return idList.get(idList.size() - 1) + 1;
+    @DeleteMapping
+    public void deleteAllFilms() {
+        filmService.deleteAllFilms();
     }
 }
