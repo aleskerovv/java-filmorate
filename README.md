@@ -17,5 +17,5 @@ WHERE birthday >='20200101'
 SELECT f.title, g.name \
 FROM film f \
 INNER JOIN film_genre fg on f.film_id=fg.film_id \
-INNER JOIN genre g on fg.genre_id=fg.genre_id \
+INNER JOIN genre g on fg.genre_id=g.genre_id \
 WHERE g.name='Comedy'

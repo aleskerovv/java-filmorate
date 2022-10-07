@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -19,7 +20,7 @@ public class FilmService {
     private final EntityStorage<User> userStorage;
 
     @Autowired
-    public FilmService(EntityStorage<Film> filmStorage, EntityStorage<User> userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") EntityStorage<Film> filmStorage, @Qualifier("userDbStorage") EntityStorage<User> userStorage) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
     }
@@ -51,6 +52,7 @@ public class FilmService {
 
 
     public Film createFilm(Film film) {
+//        return filmStorage.create(film);
         return filmStorage.create(film);
     }
 
