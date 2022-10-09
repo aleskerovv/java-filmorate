@@ -4,6 +4,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
+import ru.yandex.practicum.filmorate.model.enums.MpaRating;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PositiveOrZero;
@@ -23,10 +24,11 @@ public class Film {
     @CorrectReleaseDay(message = "must be after 28-DEC-1895")
     private LocalDate releaseDate;
     @PositiveOrZero(message = "duration can not be negative")
-    private int duration;
-    private int rating;
-    private int mpaRating;
-    private Set<Integer> genre = new HashSet<>();
+    private Integer duration;
+    private Integer rating;
+    private Integer mpaRateId;
+    private MpaRating mpaRatingName;
+    private Set<String> genres = new HashSet<>();
     private Set<Integer> likes = new HashSet<>();
 
     public void addLike(Integer id) {

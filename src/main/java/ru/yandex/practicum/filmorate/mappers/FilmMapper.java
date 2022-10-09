@@ -9,7 +9,7 @@ import java.time.LocalDate;
 public class FilmMapper {
     public static Film mapToFilm(ResultSet rs, int rowNumber) throws SQLException {
         Integer id = rs.getInt("id");
-        String name = rs.getString("title");
+        String name = rs.getString("name");
         String description = rs.getString("description");
         LocalDate releaseDate = rs.getDate("release_date").toLocalDate();
         Integer duration = rs.getInt("duration");
@@ -23,7 +23,7 @@ public class FilmMapper {
         film.setReleaseDate(releaseDate);
         film.setDuration(duration);
         film.setRating(rating);
-        film.setMpaRating(mpaRate);
+        film.setMpaRateId(mpaRate);
 
         return film;
     }
