@@ -49,6 +49,8 @@ public class UserService {
     }
 
     public List<User> getMutualFriendsSet(Integer id, Integer friendId) {
+        userStorage.findById(id);
+        userStorage.findById(friendId);
         return userStorage.getMutualFriendsSet(id, friendId);
     }
 

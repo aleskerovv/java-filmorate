@@ -4,7 +4,6 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
-import ru.yandex.practicum.filmorate.model.enums.MpaRating;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PositiveOrZero;
@@ -27,7 +26,8 @@ public class Film {
     private Integer duration;
     private Integer rating;
     private Integer mpaRateId;
-    private MpaRating mpaRatingName;
+    private String mpaRatingName;
+    private Set<Integer> genresId = new HashSet<>();
     private Set<String> genres = new HashSet<>();
     private Set<Integer> likes = new HashSet<>();
 

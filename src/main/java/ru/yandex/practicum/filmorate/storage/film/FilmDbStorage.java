@@ -2,19 +2,18 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
+import ru.yandex.practicum.filmorate.mappers.MpaMapper;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.enums.MpaRating;
+import ru.yandex.practicum.filmorate.model.MpaCategory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component("filmDbStorage")
 @Slf4j
@@ -30,15 +29,14 @@ public class FilmDbStorage implements FilmStorage {
         String query = "SELECT * FROM films";
 
         List<Film> films = jdbcTemplate.query(query, FilmMapper::mapToFilm);
-        films.stream()
-                .forEach(film -> {
+        films.forEach(film -> {
                     String likesQuery = "SELECT user_id FROM films_likes WHERE film_id = ?";
                     List<Integer> likes = jdbcTemplate.queryForList(likesQuery, Integer.class, film.getId());
                     film.setLikes(new HashSet<>(likes));
 
                     String mpaQuery = "SELECT name FROM mpa_rating where mpa_rate_id = ?";
                     String mpaRate = jdbcTemplate.queryForObject(mpaQuery, String.class, film.getMpaRateId());
-                    film.setMpaRatingName(MpaRating.valueOf(mpaRate));
+                    film.setMpaRatingName(mpaRate);
                 });
         return films;
     }
@@ -50,16 +48,16 @@ public class FilmDbStorage implements FilmStorage {
             Film film = jdbcTemplate.queryForObject(filmQuery, FilmMapper::mapToFilm, id);
 
             String likesQuery = "SELECT user_id FROM films_likes WHERE film_id = ?";
-            Optional<List<Integer>> optionalList = Optional.of(jdbcTemplate.queryForList(likesQuery, Integer.class, id));
-            film.setLikes(new HashSet<>(optionalList.orElse(new ArrayList<>(0))));
+            Optional<Set<Integer>> optionalList = Optional.of(new HashSet<>(jdbcTemplate.queryForList(likesQuery, Integer.class, id)));
+            film.setLikes(optionalList.orElse(new HashSet<>(0)));
 
             String mpaQuery = "SELECT name FROM mpa_rating where mpa_rate_id = ?";
             String mpaRate = jdbcTemplate.queryForObject(mpaQuery, String.class, film.getMpaRateId());
-            film.setMpaRatingName(MpaRating.valueOf(mpaRate));
+            film.setMpaRatingName(mpaRate);
 
             return film;
-        } catch (DataAccessException e) {
-            throw new NotFoundException("id", e.getMessage());
+        } catch (EmptyResultDataAccessException e) {
+            throw new NotFoundException("id", String.format("user with id %d not found", id));
         }
     }
 

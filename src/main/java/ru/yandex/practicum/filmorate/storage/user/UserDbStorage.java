@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -15,8 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.yandex.practicum.filmorate.model.enums.FriendshipStatus.REQUESTED;
-
 @Component("userDbStorage")
 @Slf4j
 public class UserDbStorage implements UserStorage {
@@ -29,7 +28,14 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> getAll() {
         String query = "select * from users";
-        return jdbcTemplate.query(query, UserMapper::mapToUser);
+        List<User> users = jdbcTemplate.query(query, UserMapper::mapToUser);
+        users.forEach(user -> {
+            String friendsQuery = "select friend_id from friendships where user_id = ?";
+            List<Integer> friends = jdbcTemplate.queryForList(friendsQuery, Integer.class, user.getId());
+            user.setFriends(new HashSet<>(friends));
+        });
+
+        return users;
     }
 
     @Override
@@ -37,12 +43,12 @@ public class UserDbStorage implements UserStorage {
         try {
             String query = "select * from users where id = ?";
             User user = jdbcTemplate.queryForObject(query, UserMapper::mapToUser, id);
-            user.setFriends(new HashSet<>(getFriendsSet(id)
-                    .stream()
-                    .map(User::getId)
-                    .collect(Collectors.toSet())));
+
+            String friendsQuery = "select friend_id from friendships where user_id = ?";
+            List<Integer> friends = jdbcTemplate.queryForList(friendsQuery, Integer.class, id);
+            user.setFriends(new HashSet<>(friends));
             return user;
-        } catch (DataAccessException e) {
+        } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException("id", String.format("user with id %d not found", id));
         }
     }
@@ -94,9 +100,9 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void addFriend(Integer id, Integer friendsId) {
         //TODO: handle the case when friendship is mutual
-        String query = "insert into friendships(user_id, friend_id)" +
-                "values (?, ?, ?)";
-        jdbcTemplate.update(query, id, friendsId, REQUESTED);
+        String query = "MERGE into friendships(user_id, friend_id)" +
+                "values (?, ?)";
+        jdbcTemplate.update(query, id, friendsId);
     }
 
     @Override
@@ -124,12 +130,14 @@ public class UserDbStorage implements UserStorage {
     public List<User> getMutualFriendsSet(Integer id, Integer friendId) {
         List<User> mutualFriends = new ArrayList<>();
         try {
-            String query = "SELECT DISTINCT u.ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY FROM USERS u \n" +
-                    "INNER JOIN FRIENDSHIPS f ON u.ID = f.USER_ID \n" +
-                    "WHERE f.FRIEND_ID IN (?, ?)";
+            String query = "SELECT DISTINCT u.ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY\n" +
+                    "FROM USERS u\n" +
+                    "         INNER JOIN FRIENDSHIPS f ON u.ID = f.USER_ID\n" +
+                    "WHERE u.ID IN (select DISTINCT FRIEND_ID from FRIENDSHIPS\n" +
+                    "               where USER_ID in (?, ?));";
             mutualFriends = jdbcTemplate.queryForStream(query, UserMapper::mapToUser, id, friendId)
                     .collect(Collectors.toList());
-        } catch (DataAccessException e) {
+        } catch (RuntimeException e) {
             e.getMessage();
         }
 
