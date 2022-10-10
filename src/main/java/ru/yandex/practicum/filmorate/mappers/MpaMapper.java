@@ -12,7 +12,7 @@ public class MpaMapper {
         String name = rs.getString("name");
 
         MpaCategory category = new MpaCategory();
-        category.setMpaRateId(id);
+        category.setId(id);
         category.setName(name);
 
         return category;

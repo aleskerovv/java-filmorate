@@ -24,11 +24,9 @@ public class Film {
     private LocalDate releaseDate;
     @PositiveOrZero(message = "duration can not be negative")
     private Integer duration;
-    private Integer rating;
-    private Integer mpaRateId;
-    private String mpaRatingName;
-    private Set<Integer> genresId = new HashSet<>();
-    private Set<String> genres = new HashSet<>();
+    private Integer rate;
+    private MpaCategory mpa = new MpaCategory();
+    private Set<Genre> genres = new HashSet<>();
     private Set<Integer> likes = new HashSet<>();
 
     public void addLike(Integer id) {

@@ -8,13 +8,13 @@ import java.time.LocalDate;
 
 public class FilmMapper {
     public static Film mapToFilm(ResultSet rs, int rowNumber) throws SQLException {
-        Integer id = rs.getInt("id");
+        int id = rs.getInt("id");
         String name = rs.getString("name");
         String description = rs.getString("description");
         LocalDate releaseDate = rs.getDate("release_date").toLocalDate();
         Integer duration = rs.getInt("duration");
-        Integer rating = rs.getInt("rating");
-        Integer mpaRate = rs.getInt("mpa_rate_id");
+        Integer rating = rs.getInt("rate");
+        int mpa = rs.getInt("mpa_rate_id");
 
         Film film = new Film();
         film.setId(id);
@@ -22,8 +22,8 @@ public class FilmMapper {
         film.setDescription(description);
         film.setReleaseDate(releaseDate);
         film.setDuration(duration);
-        film.setRating(rating);
-        film.setMpaRateId(mpaRate);
+        film.setRate(rating);
+        film.getMpa().setId(mpa);
 
         return film;
     }

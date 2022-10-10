@@ -6,6 +6,6 @@ import org.springframework.stereotype.Component;
 @Data
 @Component
 public class MpaCategory {
-    private int mpaRateId;
+    private int id;
     private String name;
 }

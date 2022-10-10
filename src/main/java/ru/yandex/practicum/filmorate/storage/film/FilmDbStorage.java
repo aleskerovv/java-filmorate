@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.mappers.MpaMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaCategory;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.util.*;
 
 @Component("filmDbStorage")
@@ -30,14 +32,14 @@ public class FilmDbStorage implements FilmStorage {
 
         List<Film> films = jdbcTemplate.query(query, FilmMapper::mapToFilm);
         films.forEach(film -> {
-                    String likesQuery = "SELECT user_id FROM films_likes WHERE film_id = ?";
-                    List<Integer> likes = jdbcTemplate.queryForList(likesQuery, Integer.class, film.getId());
-                    film.setLikes(new HashSet<>(likes));
+            String likesQuery = "SELECT user_id FROM films_likes WHERE film_id = ?";
+            List<Integer> likes = jdbcTemplate.queryForList(likesQuery, Integer.class, film.getId());
+            film.setLikes(new HashSet<>(likes));
 
-                    String mpaQuery = "SELECT name FROM mpa_rating where mpa_rate_id = ?";
-                    String mpaRate = jdbcTemplate.queryForObject(mpaQuery, String.class, film.getMpaRateId());
-                    film.setMpaRatingName(mpaRate);
-                });
+            String mpaQuery = "SELECT mpa_rate_id, name FROM mpa_rating where mpa_rate_id = ?";
+            MpaCategory mpaRate = jdbcTemplate.queryForObject(mpaQuery, MpaMapper::mapToMpa, film.getMpa().getId());
+            film.setMpa(mpaRate);
+        });
         return films;
     }
 
@@ -51,9 +53,9 @@ public class FilmDbStorage implements FilmStorage {
             Optional<Set<Integer>> optionalList = Optional.of(new HashSet<>(jdbcTemplate.queryForList(likesQuery, Integer.class, id)));
             film.setLikes(optionalList.orElse(new HashSet<>(0)));
 
-            String mpaQuery = "SELECT name FROM mpa_rating where mpa_rate_id = ?";
-            String mpaRate = jdbcTemplate.queryForObject(mpaQuery, String.class, film.getMpaRateId());
-            film.setMpaRatingName(mpaRate);
+            String mpaQuery = "SELECT mpa_rate_id,name FROM mpa_rating where mpa_rate_id = ?";
+            MpaCategory mpaRate = jdbcTemplate.queryForObject(mpaQuery, MpaMapper::mapToMpa, film.getMpa().getId());
+            film.setMpa(mpaRate);
 
             return film;
         } catch (EmptyResultDataAccessException e) {
@@ -63,13 +65,25 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
-        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
-                .withTableName("films")
-                .usingGeneratedKeyColumns("id");
+        String query = "insert into films(name, description, release_date, duration, rate, mpa_rate_id) \n" +
+                "values (?, ?, ?, ?, ?, ?)";
 
-        int id = jdbcInsert.executeAndReturnKey(new BeanPropertySqlParameterSource(film)).intValue();
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        film.setId(id);
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmnt = connection.prepareStatement(query, new String[]{"id"});
+            stmnt.setString(1, film.getName());
+            stmnt.setString(2, film.getDescription());
+            stmnt.setDate(3, Date.valueOf(film.getReleaseDate()));
+            stmnt.setInt(4, film.getDuration());
+            stmnt.setInt(5, film.getRate());
+            stmnt.setInt(6, film.getMpa().getId());
+            return stmnt;
+        }, keyHolder);
+
+        Optional<Integer> id = Optional.of(keyHolder.getKey().intValue());
+
+        film.setId(id.get());
         return film;
     }
 
@@ -88,8 +102,8 @@ public class FilmDbStorage implements FilmStorage {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getRating(),
-                film.getMpaRateId());
+                film.getRate(),
+                film.getMpa());
 
         return findById(film.getId());
     }
