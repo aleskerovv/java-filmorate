@@ -55,7 +55,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User create(User user) {
-        //TODO: create static checker for name validation
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
@@ -99,15 +98,14 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(Integer id, Integer friendsId) {
-        //TODO: handle the case when friendship is mutual
-        String query = "MERGE into friendships(user_id, friend_id)" +
+        String query = "merge into friendships(user_id, friend_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(query, id, friendsId);
     }
 
     @Override
     public void deleteFriend(Integer id, Integer friendId) {
-        String query = "delete from friendships where user_id in (?, ?)";
+        String query = "delete from friendships where user_id = ? and friend_id = ?";
         jdbcTemplate.update(query, id, friendId);
     }
 
@@ -130,14 +128,16 @@ public class UserDbStorage implements UserStorage {
     public List<User> getMutualFriendsSet(Integer id, Integer friendId) {
         List<User> mutualFriends = new ArrayList<>();
         try {
-            String query = "SELECT DISTINCT u.ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY\n" +
-                    "FROM USERS u\n" +
-                    "         INNER JOIN FRIENDSHIPS f ON u.ID = f.USER_ID\n" +
-                    "WHERE u.ID IN (select DISTINCT FRIEND_ID from FRIENDSHIPS\n" +
-                    "               where USER_ID in (?, ?));";
+            String query = "SELECT DISTINCT u.ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY \n " +
+                    "FROM USERS u \n " +
+                    "WHERE u.ID IN (SELECT DISTINCT f.FRIEND_ID \n " +
+                    "               from FRIENDSHIPS f \n " +
+                    "                        inner join (select FRIEND_ID from FRIENDSHIPS where USER_ID = ?) uf " +
+                    "on uf.FRIEND_ID = f.FRIEND_ID \n " +
+                    "               where USER_ID = ?)";
             mutualFriends = jdbcTemplate.queryForStream(query, UserMapper::mapToUser, id, friendId)
                     .collect(Collectors.toList());
-        } catch (RuntimeException e) {
+        } catch (DataAccessException e) {
             e.getMessage();
         }
 

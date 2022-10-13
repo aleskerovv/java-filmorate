@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.mappers;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MpaCategory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +16,7 @@ public class FilmMapper {
         Integer duration = rs.getInt("duration");
         Integer rating = rs.getInt("rate");
         int mpa = rs.getInt("mpa_rate_id");
+        String mpaName = rs.getString("mpa_name");
 
         Film film = new Film();
         film.setId(id);
@@ -23,7 +25,9 @@ public class FilmMapper {
         film.setReleaseDate(releaseDate);
         film.setDuration(duration);
         film.setRate(rating);
+        film.setMpa(new MpaCategory());
         film.getMpa().setId(mpa);
+        film.getMpa().setName(mpaName);
 
         return film;
     }

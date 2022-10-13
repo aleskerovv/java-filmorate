@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,7 +11,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.EntityStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -28,15 +26,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
+
     @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
-    private EntityStorage<Film> filmStorage;
-
-    @BeforeEach
-    void clear() {
-        filmStorage.deleteAll();
-    }
 
     @Test
     void creates_newFilm_andStatusIs200() throws Exception {
@@ -45,7 +37,7 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(50);
-
+        f.getMpa().setId(1);
 
         mockMvc.perform(
                 post("/films")

@@ -1,10 +1,12 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.MpaCategory;
+import ru.yandex.practicum.filmorate.service.MpaService;
 import ru.yandex.practicum.filmorate.storage.AbstractStorage;
 
 import java.util.List;
@@ -12,19 +14,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/mpa")
 public class MpaController {
-    private final AbstractStorage<MpaCategory> mpaStorage;
+    private final MpaService mpaService;
 
-    public MpaController(AbstractStorage<MpaCategory> mpaStorage) {
-        this.mpaStorage = mpaStorage;
+    @Autowired
+    public MpaController(MpaService mpaService) {
+        this.mpaService = mpaService;
     }
 
     @GetMapping("/{id}")
     public MpaCategory findCategoryById(@PathVariable int id) {
-        return mpaStorage.getById(id);
+        return mpaService.getById(id);
     }
 
     @GetMapping
     public List<MpaCategory> getAllCategories() {
-        return mpaStorage.getAll();
+        return mpaService.getAll();
     }
 }

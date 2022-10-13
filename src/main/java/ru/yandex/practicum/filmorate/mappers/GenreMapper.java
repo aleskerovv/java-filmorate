@@ -11,7 +11,7 @@ public class GenreMapper {
         String name = rs.getString("name");
 
         Genre genre = new Genre();
-        genre.setGenreId(id);
+        genre.setId(id);
         genre.setName(name);
 
         return genre;

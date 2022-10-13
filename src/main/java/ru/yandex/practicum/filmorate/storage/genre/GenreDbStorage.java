@@ -18,7 +18,7 @@ public class GenreDbStorage implements AbstractStorage<Genre> {
 
     @Override
     public Genre getById(int id) {
-        String query = "select * from genre \n" +
+        String query = "select * from genres \n" +
                 "where genre_id = ?";
 
         return jdbcTemplate.queryForObject(query, GenreMapper::mapToGenre, id);
@@ -26,7 +26,7 @@ public class GenreDbStorage implements AbstractStorage<Genre> {
 
     @Override
     public List<Genre> getAll() {
-        String query = "select * from genre";
+        String query = "select * from genres";
 
         return jdbcTemplate.query(query, GenreMapper::mapToGenre);
     }

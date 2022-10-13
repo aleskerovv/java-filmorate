@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import lombok.NonNull;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
@@ -25,6 +26,7 @@ public class Film {
     @PositiveOrZero(message = "duration can not be negative")
     private Integer duration;
     private Integer rate;
+    @NonNull
     private MpaCategory mpa = new MpaCategory();
     private Set<Genre> genres = new HashSet<>();
     private Set<Integer> likes = new HashSet<>();
