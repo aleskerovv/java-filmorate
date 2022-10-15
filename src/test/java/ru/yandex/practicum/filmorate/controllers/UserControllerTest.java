@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate;
+package ru.yandex.practicum.filmorate.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Sql(scripts = {"file:src/main/resources/schema.sql", "file:src/main/resources/data.sql"})
 class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -128,7 +130,7 @@ class UserControllerTest {
     }
 
     @Test
-    void when_User_idIsNegative_statusIs400() throws Exception {
+    void when_User_idIsNegative_statusIs404() throws Exception {
         User u1 = new User();
         u1.setId(-1);
         u1.setLogin("testUser");
@@ -139,11 +141,10 @@ class UserControllerTest {
                         put("/users")
                                 .content(objectMapper.writeValueAsString(u1))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isNotFound())
+                ).andExpect(status().isBadRequest())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof IllegalArgumentException))
-                .andExpect(result -> assertEquals("id cannot be negative",
-                        result.getResponse().getContentAsString()));
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(jsonPath("$.id").value("must be positive"));
     }
 
     @Test
@@ -318,11 +319,11 @@ class UserControllerTest {
         );
 
         mockMvc.perform(put("/users/1/friends/2"));
-        mockMvc.perform(put("/users/1/friends/3"));
+        mockMvc.perform(put("/users/3/friends/2"));
         mockMvc.perform(get("/users/1/friends/common/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.*", hasSize(0)));
-        mockMvc.perform(get("/users/3/friends/common/2"))
+        mockMvc.perform(get("/users/1/friends/common/3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.*", hasSize(1)));
     }

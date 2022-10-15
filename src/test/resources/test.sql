@@ -105,3 +105,15 @@ merge into MPA_RATING(MPA_RATE_ID, NAME)
     VALUES (4, 'R');
 merge into MPA_RATING(MPA_RATE_ID, NAME)
     VALUES (5, 'NC-17');
+
+insert into films(name, description, release_date, duration, rate, mpa_rate_id)
+values ('test', 'test desc', '20220101', 100, 15, 1);
+insert into films(name, description, release_date, duration, rate, mpa_rate_id)
+values ('another test', 'test 2', '20220102', 100, 15, 2);
+
+insert into users(email, login, name, birthday)
+values('user@mail.ru', 'user1', 'user1', '19850101');
+insert into users(email, login, name, birthday)
+values('user2@gmail.com', 'user2', 'user2', '19950101');
+insert into users(email, login, name, birthday)
+values('user3@mail.ru', 'user3', 'user3', '19650101');

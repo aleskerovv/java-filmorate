@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate;
+package ru.yandex.practicum.filmorate.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Sql(scripts = {"file:src/main/resources/schema.sql", "file:src/main/resources/data.sql"})
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -37,6 +39,7 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(50);
+        f.setRate(5);
         f.getMpa().setId(1);
 
         mockMvc.perform(
@@ -53,12 +56,17 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(50);
+        f.setRate(5);
+        f.getMpa().setId(1);
         Film f2 = new Film();
         f2.setId(1);
         f2.setName("New film upd");
         f2.setDescription("Desc of new film");
         f2.setReleaseDate(LocalDate.now());
         f2.setDuration(25);
+        f2.setRate(5);
+        f2.getMpa().setId(1);
+        f2.getMpa().setName("G");
 
         mockMvc.perform(
                 post("/films")
@@ -161,7 +169,7 @@ class FilmControllerTest {
                 ).andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
                         instanceof IllegalArgumentException))
-                .andExpect(result -> assertEquals("id must be positive",
+                .andExpect(result -> assertEquals("id cannot be negative",
                         result.getResponse().getContentAsString()));
     }
 
@@ -172,6 +180,8 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+        f.setRate(5);
+        f.getMpa().setId(1);
 
         mockMvc.perform(
                 post("/films")
@@ -180,6 +190,7 @@ class FilmControllerTest {
         ).andExpect(status().is(200));
 
         f.setId(1);
+        f.getMpa().setName("G");
 
         mockMvc.perform(
                         get("/films"))
@@ -199,6 +210,8 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+        f.setRate(5);
+        f.getMpa().setId(1);
 
         mockMvc.perform(
                 post("/users")
@@ -233,6 +246,8 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+        f.setRate(5);
+        f.getMpa().setId(1);
 
         mockMvc.perform(
                 post("/users")
@@ -269,18 +284,24 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+        f.setRate(5);
+        f.getMpa().setId(1);
 
         Film f2 = new Film();
         f2.setName("New f2ilm upd");
         f2.setDescription("Desc of2 new f2ilm");
         f2.setReleaseDate(LocalDate.now());
         f2.setDuration(25);
+        f2.setRate(5);
+        f2.getMpa().setId(1);
 
         Film f3 = new Film();
         f3.setName("New film upd");
         f3.setDescription("Desc of new film");
         f3.setReleaseDate(LocalDate.now());
         f3.setDuration(25);
+        f3.setRate(5);
+        f3.getMpa().setId(1);
 
         mockMvc.perform(
                 post("/films")
@@ -323,18 +344,24 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+        f.setRate(5);
+        f.getMpa().setId(1);
 
         Film f2 = new Film();
         f2.setName("New f2ilm upd");
         f2.setDescription("Desc of2 new f2ilm");
         f2.setReleaseDate(LocalDate.now());
         f2.setDuration(25);
+        f2.setRate(5);
+        f2.getMpa().setId(2);
 
         Film f3 = new Film();
         f3.setName("New film upd");
         f3.setDescription("Desc of new film");
         f3.setReleaseDate(LocalDate.now());
         f3.setDuration(25);
+        f3.setRate(5);
+        f3.getMpa().setId(3);
 
         mockMvc.perform(
                 post("/users")
@@ -349,6 +376,7 @@ class FilmControllerTest {
         ).andExpect(status().is(200));
 
         f.setId(1);
+        f.getMpa().setName("G");
 
 
 
@@ -359,6 +387,7 @@ class FilmControllerTest {
         ).andExpect(status().is(200));
 
         f2.setId(2);
+        f2.getMpa().setName("PG");
 
         mockMvc.perform(
                 post("/films")
@@ -367,6 +396,7 @@ class FilmControllerTest {
         ).andExpect(status().is(200));
 
         f3.setId(3);
+        f3.getMpa().setName("PG-13");
 
         mockMvc.perform(put("/films/3/like/1"))
                 .andExpect(status().isOk());
@@ -383,6 +413,8 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(25);
+        f.setRate(5);
+        f.getMpa().setId(1);
         mockMvc.perform(
                 post("/films")
                         .content(objectMapper.writeValueAsString(f))

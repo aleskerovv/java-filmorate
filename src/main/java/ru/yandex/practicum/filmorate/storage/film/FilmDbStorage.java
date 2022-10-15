@@ -59,6 +59,9 @@ public class FilmDbStorage implements FilmStorage {
             Set<Genre> genres = new HashSet<>(jdbcTemplate.query(genresQuery, GenreMapper::mapToGenre, id));
             film.setGenres(genres);
 
+            String likesQuery = "select user_id from films_likes where film_id = ? order by user_id asc";
+            film.setLikes(new HashSet<>(jdbcTemplate.queryForList(likesQuery, Integer.class, id)));
+
             return film;
         } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException("id", String.format("film with id %d not found", id));
@@ -159,12 +162,15 @@ public class FilmDbStorage implements FilmStorage {
                     "FROM FILMS f \n " +
                     "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
                     "LEFT JOIN FILMS_LIKES fl ON f.ID = fl.FILM_ID\n " +
-                    "GROUP BY f.ID\n " +
-                    "ORDER BY count(fl.FILM_ID) DESC\n " +
+                    "GROUP BY f.ID \n " +
+                    "ORDER BY count(fl.FILM_ID) DESC, f.ID ASC \n " +
                     "LIMIT ? ";
             filmsSorted = jdbcTemplate.query(query, FilmMapper::mapToFilm, count);
 
             filmsSorted.forEach(film -> {
+                String likesQuery = "select user_id from films_likes where film_id = ? order by user_id asc";
+                film.setLikes(new HashSet<>(jdbcTemplate.queryForList(likesQuery, Integer.class, film.getId())));
+
                 String genresQuery = "select fg.GENRE_ID, g2.NAME from FILMS_GENRES fg \n " +
                         "inner join GENRES G2 on fg.GENRE_ID = G2.GENRE_ID \n " +
                         "where fg.FILM_ID = ?";
