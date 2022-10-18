@@ -30,7 +30,6 @@ public class FilmService {
 
     public void deleteLike(Integer filmId, Integer userId) {
         userStorage.findById(userId);
-        filmStorage.findById(filmId);
         filmStorage.deleteLike(filmId, userId);
         log.info("like for film with id={} deleted", filmId);
     }

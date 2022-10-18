@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Data;
 import lombok.NonNull;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
 
 import javax.validation.constraints.NotBlank;
@@ -13,7 +12,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@Component
 public class Film {
     @PositiveOrZero(message = "must be positive")
     private int id;

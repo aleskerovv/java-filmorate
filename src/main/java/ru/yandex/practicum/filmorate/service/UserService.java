@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -20,17 +19,8 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public void addFriend(Integer id, Integer friendsId) {
-        if (userStorage.findById(id) == null) {
-            log.error("user with id={} not found", id);
-            throw new NotFoundException("id", String.format("user with id=%d not found", id));
-        }
-        if (userStorage.findById(friendsId) == null) {
-            log.error("user with id={} not found", friendsId);
-            throw new NotFoundException("id", String.format("user with id=%d not found", friendsId));
-        }
-
-        userStorage.addFriend(id, friendsId);
+    public void addFriend(Integer id, Integer friendId) {
+        userStorage.addFriend(id, friendId);
     }
 
     public void deleteFriend(Integer id, Integer friendId) {
@@ -42,15 +32,10 @@ public class UserService {
             throw new IllegalArgumentException("id must be positive");
         }
 
-        if (userStorage.findById(id) == null) {
-            throw new NotFoundException("id", String.format("user with id=%d not found", id));
-        }
         return userStorage.getFriendsSet(id);
     }
 
     public List<User> getMutualFriendsSet(Integer id, Integer friendId) {
-        userStorage.findById(id);
-        userStorage.findById(friendId);
         return userStorage.getMutualFriendsSet(id, friendId);
     }
 
@@ -67,8 +52,6 @@ public class UserService {
     }
 
     public User findUserById(Integer id) {
-        User user = userStorage.findById(id);
-        if (user == null) throw new NotFoundException("id", String.format("user with id %d not found", id));
         return userStorage.findById(id);
     }
 

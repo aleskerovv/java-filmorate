@@ -22,10 +22,12 @@ public class MpaService {
         if (id < 0) {
             throw new IllegalArgumentException("id cannot be negative");
         }
+        log.info("find mpa category by id {}", id);
         return mpaStorage.getById(id);
     }
 
     public List<MpaCategory> getAll() {
+        log.info("find all mpa categories");
         return mpaStorage.getAll();
     }
 }

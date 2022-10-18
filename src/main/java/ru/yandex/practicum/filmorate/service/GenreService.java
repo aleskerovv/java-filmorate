@@ -22,10 +22,12 @@ public class GenreService {
         if (id < 0) {
             throw new IllegalArgumentException("id cannot be negative");
         }
+        log.info("find genre by id {}", id);
         return genreStorage.getById(id);
     }
 
     public List<Genre> getAll() {
+        log.info("find all genres");
         return genreStorage.getAll();
     }
 }

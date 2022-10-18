@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -21,7 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Sql(scripts = {"file:src/test/resources/test.sql"})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Sql(scripts = {"file:src/test/resources/test-schema.sql",
+        "file:src/test/resources/test-data-users-films.sql"})
 class UserDbStorageTest {
     private final UserDbStorage userStorage;
 
@@ -94,7 +97,7 @@ class UserDbStorageTest {
     }
 
     @Test
-    void test__getMutualFriend() {
+    void test_getMutualFriend() {
         userStorage.addFriend(1, 2);
         userStorage.addFriend(3, 2);
 

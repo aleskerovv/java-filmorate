@@ -1,12 +1,4 @@
-DROP TABLE IF EXISTS USERS CASCADE;
-DROP TABLE IF EXISTS FRIENDSHIPS CASCADE;
-DROP TABLE IF EXISTS FILMS CASCADE;
-DROP TABLE IF EXISTS FILMS_LIKES CASCADE;
-DROP TABLE IF EXISTS FILMS_GENRES CASCADE;
-DROP TABLE IF EXISTS MPA_RATING CASCADE;
-DROP TABLE IF EXISTS GENRES CASCADE;
-
-create table USERS
+create table if not exists USERS
 (
     ID       INTEGER auto_increment
         primary key,
@@ -16,7 +8,7 @@ create table USERS
     BIRTHDAY DATE
 );
 
-create table FRIENDSHIPS
+create table if not exists FRIENDSHIPS
 (
     USER_ID   INTEGER not null,
     FRIEND_ID INTEGER not null,
@@ -27,14 +19,14 @@ create table FRIENDSHIPS
         foreign key (USER_ID) references USERS
 );
 
-create table MPA_RATING
+create table if not exists MPA_RATING
 (
     MPA_RATE_ID int,
     NAME        CHARACTER VARYING(64) not null,
     primary key (MPA_RATE_ID)
 );
 
-create table FILMS
+create table if not exists FILMS
 (
     ID           INTEGER auto_increment
         primary key,
@@ -42,19 +34,19 @@ create table FILMS
     DESCRIPTION  CHARACTER VARYING(200),
     RELEASE_DATE DATE,
     DURATION     INTEGER,
-    RATE         INTEGER,
+    RATE         INTEGER DEFAULT 0,
     MPA_RATE_ID  INTEGER,
     constraint FILMS_FK
         foreign key (MPA_RATE_ID) references MPA_RATING
 );
 
-create table GENRES
+create table if not exists GENRES
 (
     GENRE_ID INTEGER  primary key,
     NAME     CHARACTER VARYING(64) not null
 );
 
-create table FILMS_LIKES
+create table if not exists FILMS_LIKES
 (
     FILM_ID INTEGER not null,
     USER_ID INTEGER not null,
@@ -65,7 +57,7 @@ create table FILMS_LIKES
         foreign key (FILM_ID) references FILMS
 );
 
-create table FILMS_GENRES
+create table if not exists FILMS_GENRES
 (
     FILM_ID  INTEGER not null,
     GENRE_ID INTEGER not null,
@@ -75,33 +67,3 @@ create table FILMS_GENRES
     constraint FILM_GENRE_FK_1
         foreign key (GENRE_ID) references GENRES
 );
-
-merge into GENRES(GENRE_ID, name)
-    values (1, 'Комедия');
-
-merge into GENRES(GENRE_ID, name)
-    values (2, 'Драма');
-
-merge into GENRES(GENRE_ID, name)
-    values (3, 'Мультфильм');
-
-merge into GENRES(GENRE_ID, name)
-    values (4, 'Триллер');
-
-merge into GENRES(GENRE_ID, name)
-    values (5, 'Документальный');
-
-merge into GENRES(GENRE_ID, name)
-    values (6, 'Боевик');
-
-
-merge into MPA_RATING(MPA_RATE_ID, NAME)
-    VALUES (1, 'G');
-merge into MPA_RATING(MPA_RATE_ID, NAME)
-    VALUES (2, 'PG');
-merge into MPA_RATING(MPA_RATE_ID, NAME)
-    VALUES (3, 'PG-13');
-merge into MPA_RATING(MPA_RATE_ID, NAME)
-    VALUES (4, 'R');
-merge into MPA_RATING(MPA_RATE_ID, NAME)
-    VALUES (5, 'NC-17');

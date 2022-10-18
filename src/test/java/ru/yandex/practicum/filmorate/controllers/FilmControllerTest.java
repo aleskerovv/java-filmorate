@@ -4,18 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,7 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Sql(scripts = {"file:src/main/resources/schema.sql", "file:src/main/resources/data.sql"})
+@AutoConfigureTestDatabase
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Sql(scripts = {"file:src/test/resources/test-schema.sql", "file:src/test/resources/test-data-users-films.sql"})
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -39,8 +41,8 @@ class FilmControllerTest {
         f.setDescription("Desc of new film");
         f.setReleaseDate(LocalDate.now());
         f.setDuration(50);
-        f.setRate(5);
-        f.getMpa().setId(1);
+        f.getMpa().setId(3);
+
 
         mockMvc.perform(
                 post("/films")
@@ -51,35 +53,29 @@ class FilmControllerTest {
 
     @Test
     void updates_presentedFilm_andStatusIs200() throws Exception {
-        Film f = new Film();
-        f.setName("New film");
-        f.setDescription("Desc of new film");
-        f.setReleaseDate(LocalDate.now());
-        f.setDuration(50);
-        f.setRate(5);
-        f.getMpa().setId(1);
         Film f2 = new Film();
         f2.setId(1);
-        f2.setName("New film upd");
+        f2.setName("first film upd");
         f2.setDescription("Desc of new film");
         f2.setReleaseDate(LocalDate.now());
         f2.setDuration(25);
-        f2.setRate(5);
         f2.getMpa().setId(1);
-        f2.getMpa().setName("G");
 
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
 
         mockMvc.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(f2))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().is(200))
-                .andExpect(content().json(objectMapper.writeValueAsString(f2)));
+                ).andExpect(status().is(200));
+
+        f2.getMpa().setName("G");
+        f2.setRate(0);
+
+        mockMvc.perform(
+                get("/films/1")
+                        .content(objectMapper.writeValueAsString(f2))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(content().json(objectMapper.writeValueAsString(f2)));
     }
 
     @Test
@@ -175,58 +171,14 @@ class FilmControllerTest {
 
     @Test
     void films_ListIsNotEmpty_andStatusIs200() throws Exception {
-        Film f = new Film();
-        f.setName("New film upd");
-        f.setDescription("Desc of new film");
-        f.setReleaseDate(LocalDate.now());
-        f.setDuration(25);
-        f.setRate(5);
-        f.getMpa().setId(1);
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f.setId(1);
-        f.getMpa().setName("G");
-
         mockMvc.perform(
                         get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(List.of(f))));
+                .andExpect(jsonPath("$.*", hasSize(3)));
     }
 
     @Test
     void addLikeToFilm_AndLikesCountIs1() throws Exception {
-        User u1 = new User();
-        u1.setName("updatedUser");
-        u1.setEmail("asd@mail.ru");
-        u1.setLogin("logIn");
-        u1.setBirthday(LocalDate.now());
-        Film f = new Film();
-        f.setName("New film upd");
-        f.setDescription("Desc of new film");
-        f.setReleaseDate(LocalDate.now());
-        f.setDuration(25);
-        f.setRate(5);
-        f.getMpa().setId(1);
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(u1))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f.setId(1);
-
         mockMvc.perform(put("/films/1/like/1"))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/films/1"))
@@ -235,196 +187,44 @@ class FilmControllerTest {
 
     @Test
     void deleteLikes_andLikesCountIs0() throws Exception {
-        User u1 = new User();
-        u1.setName("updatedUser");
-        u1.setEmail("asd@mail.ru");
-        u1.setLogin("logIn");
-        u1.setBirthday(LocalDate.now());
-
-        Film f = new Film();
-        f.setName("New film upd");
-        f.setDescription("Desc of new film");
-        f.setReleaseDate(LocalDate.now());
-        f.setDuration(25);
-        f.setRate(5);
-        f.getMpa().setId(1);
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(u1))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f.setId(1);
-
-        mockMvc.perform(put("/films/1/like/1"));
-        mockMvc.perform(delete("/films/1/like/1"))
+        mockMvc.perform(put("/films/2/like/1"));
+        mockMvc.perform(delete("/films/2/like/1"))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/films/1"))
+        mockMvc.perform(get("/films/2"))
                 .andExpect(jsonPath("$.likes", hasSize(0)));
     }
 
 
     @Test
     void addLikeToFilm_whichNotPresent() throws Exception {
-        mockMvc.perform(put("/films/1/like/1"))
+        mockMvc.perform(put("/films/15/like/1"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void getTop2Film() throws Exception {
-        Film f = new Film();
-        f.setName("New film upd");
-        f.setDescription("Desc of new film");
-        f.setReleaseDate(LocalDate.now());
-        f.setDuration(25);
-        f.setRate(5);
-        f.getMpa().setId(1);
-
-        Film f2 = new Film();
-        f2.setName("New f2ilm upd");
-        f2.setDescription("Desc of2 new f2ilm");
-        f2.setReleaseDate(LocalDate.now());
-        f2.setDuration(25);
-        f2.setRate(5);
-        f2.getMpa().setId(1);
-
-        Film f3 = new Film();
-        f3.setName("New film upd");
-        f3.setDescription("Desc of new film");
-        f3.setReleaseDate(LocalDate.now());
-        f3.setDuration(25);
-        f3.setRate(5);
-        f3.getMpa().setId(1);
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f.setId(1);
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f2))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f2.setId(2);
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f3))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f3.setId(3);
-
         mockMvc.perform(get("/films/popular?count=2"))
                 .andExpect(jsonPath("$.*", hasSize(2)));
     }
 
     @Test
     void getFilmsTopSortedByLikes() throws Exception {
-        User u1 = new User();
-        u1.setName("updatedUser");
-        u1.setEmail("asd@mail.ru");
-        u1.setLogin("logIn");
-        u1.setBirthday(LocalDate.now());
-
-        Film f = new Film();
-        f.setName("New film upd");
-        f.setDescription("Desc of new film");
-        f.setReleaseDate(LocalDate.now());
-        f.setDuration(25);
-        f.setRate(5);
-        f.getMpa().setId(1);
-
-        Film f2 = new Film();
-        f2.setName("New f2ilm upd");
-        f2.setDescription("Desc of2 new f2ilm");
-        f2.setReleaseDate(LocalDate.now());
-        f2.setDuration(25);
-        f2.setRate(5);
-        f2.getMpa().setId(2);
-
-        Film f3 = new Film();
-        f3.setName("New film upd");
-        f3.setDescription("Desc of new film");
-        f3.setReleaseDate(LocalDate.now());
-        f3.setDuration(25);
-        f3.setRate(5);
-        f3.getMpa().setId(3);
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(u1))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f.setId(1);
-        f.getMpa().setName("G");
-
-
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f2))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f2.setId(2);
-        f2.getMpa().setName("PG");
-
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f3))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        f3.setId(3);
-        f3.getMpa().setName("PG-13");
-
         mockMvc.perform(put("/films/3/like/1"))
                 .andExpect(status().isOk());
-        f3.addLike(1);
-        mockMvc.perform(get("/films/popular?count=2"))
-                .andExpect(jsonPath("$.*", hasSize(2)))
-                .andExpect(content().json(objectMapper.writeValueAsString(List.of(f3, f))));
-    }
-
-    @Test
-    void deleteAllFilms() throws Exception {
-        Film f = new Film();
-        f.setName("New film upd");
-        f.setDescription("Desc of new film");
-        f.setReleaseDate(LocalDate.now());
-        f.setDuration(25);
-        f.setRate(5);
-        f.getMpa().setId(1);
-        mockMvc.perform(
-                post("/films")
-                        .content(objectMapper.writeValueAsString(f))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        mockMvc.perform(delete("/films"))
+        mockMvc.perform(put("/films/3/like/2"))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/films"))
-                .andExpect(content().json(objectMapper.writeValueAsString(List.of())));
 
+        mockMvc.perform(get("/films/popular?count=1"))
+                .andExpect(jsonPath("$.*", hasSize(1)))
+                .andExpect(jsonPath("$..description").value("test desc of third film"));
     }
+//
+//    @Test
+//    void deleteAllFilms() throws Exception {
+//        mockMvc.perform(delete("/films"))
+//                .andExpect(status().isOk());
+//        mockMvc.perform(get("/films"))
+//                .andExpect(jsonPath("$.*", hasSize(0)));
+//
+//    }
 }

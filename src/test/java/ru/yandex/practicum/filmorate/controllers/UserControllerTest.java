@@ -4,25 +4,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.time.Month;
 import java.util.List;
 
+import static java.time.Month.JANUARY;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Sql(scripts = {"file:src/main/resources/schema.sql", "file:src/main/resources/data.sql"})
+@AutoConfigureTestDatabase
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Sql(scripts = {"file:src/test/resources/test-schema.sql", "file:src/test/resources/test-data-users-films.sql"})
 class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -46,12 +51,6 @@ class UserControllerTest {
 
     @Test
     void updates_presentedUser_inUsersList_andStatusIs200() throws Exception {
-        User u = new User();
-        u.setName("asd");
-        u.setEmail("asd@mail.ru");
-        u.setLogin("logIn");
-        u.setBirthday(LocalDate.now());
-
         User u2 = new User();
         u2.setId(1);
         u2.setName("updatedUser");
@@ -60,22 +59,15 @@ class UserControllerTest {
         u2.setBirthday(LocalDate.now());
 
         mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(u))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        mockMvc.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(u2))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().is(200))
-                .andExpect(content().json(objectMapper.writeValueAsString(u2)));
+                ).andExpect(status().is(200));
 
         mockMvc.perform(
-                        get("/users"))
+                        get("/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(Arrays.asList(u2))));
+                .andExpect(content().json(objectMapper.writeValueAsString(u2)));
     }
 
     @Test
@@ -148,43 +140,20 @@ class UserControllerTest {
 
     @Test
     void checkUserListNotNull() throws Exception {
-        User u1 = new User();
-        u1.setName("updatedUser");
-        u1.setEmail("asd@mail.ru");
-        u1.setLogin("logIn");
-        u1.setBirthday(LocalDate.now());
-
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(u1))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
-        u1.setId(1);
-
         mockMvc.perform(
                         get("/users"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(List.of(u1))));
+                .andExpect(jsonPath("$.*", hasSize(3)));
     }
 
     @Test
     void checkFindUserById() throws Exception {
         User u1 = new User();
-        u1.setName("updatedUser");
-        u1.setEmail("asd@mail.ru");
-        u1.setLogin("logIn");
-        u1.setBirthday(LocalDate.now());
-
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(u1))
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().is(200));
-
         u1.setId(1);
+        u1.setName("user1");
+        u1.setEmail("user@mail.ru");
+        u1.setLogin("user1");
+        u1.setBirthday(LocalDate.of(1985, JANUARY, 1));
 
         mockMvc.perform(
                         get("/users/1"))
@@ -194,86 +163,20 @@ class UserControllerTest {
 
     @Test
     void addToFriendList() throws Exception {
-        User user = new User();
-        user.setLogin("newUser");
-        user.setBirthday(LocalDate.now());
-        user.setEmail("new@mail.ru");
-
-        User friend = new User();
-        friend.setLogin("friend");
-        friend.setBirthday(LocalDate.now());
-        friend.setEmail("friend@email.ru");
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(friend))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
         mockMvc.perform(put("/users/1/friends/2"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void deleteFromFriendList() throws Exception {
-        User user = new User();
-        user.setLogin("newUser");
-        user.setBirthday(LocalDate.now());
-        user.setEmail("new@mail.ru");
+        mockMvc.perform(put("/users/2/friends/1"));
 
-        User friend = new User();
-        friend.setLogin("friend");
-        friend.setBirthday(LocalDate.now());
-        friend.setEmail("friend@email.ru");
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(friend))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(put("/users/1/friends/2"));
-
-        mockMvc.perform(delete("/users/1/friends/2"))
+        mockMvc.perform(delete("/users/2/friends/1"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void checkFriendList_AndSizeIs1() throws Exception {
-        User user = new User();
-        user.setLogin("newUser");
-        user.setBirthday(LocalDate.now());
-        user.setEmail("new@mail.ru");
-
-        User friend = new User();
-        friend.setLogin("friend");
-        friend.setBirthday(LocalDate.now());
-        friend.setEmail("friend@email.ru");
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(friend))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
         mockMvc.perform(put("/users/1/friends/2"));
 
         mockMvc.perform(get("/users/1/friends"))
@@ -284,39 +187,6 @@ class UserControllerTest {
 
     @Test
     void createCommonFriends_andCommonFriendsNotEmpty() throws Exception {
-        User user = new User();
-        user.setLogin("newUser");
-        user.setBirthday(LocalDate.now());
-        user.setEmail("new@mail.ru");
-
-        User friend = new User();
-        friend.setLogin("friend");
-        friend.setBirthday(LocalDate.now());
-        friend.setEmail("friend@email.ru");
-
-        User commonFriend = new User();
-        commonFriend.setLogin("commonFriend");
-        commonFriend.setBirthday(LocalDate.now());
-        commonFriend.setEmail("common@mail.ru");
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(friend))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(commonFriend))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
         mockMvc.perform(put("/users/1/friends/2"));
         mockMvc.perform(put("/users/3/friends/2"));
         mockMvc.perform(get("/users/1/friends/common/2"))
@@ -324,25 +194,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.*", hasSize(0)));
         mockMvc.perform(get("/users/1/friends/common/3"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", hasSize(1)));
-    }
-
-    @Test
-    void deleteAllUsers() throws Exception {
-        User user = new User();
-        user.setLogin("newUser");
-        user.setBirthday(LocalDate.now());
-        user.setEmail("new@mail.ru");
-
-        mockMvc.perform(
-                post("/users")
-                        .content(objectMapper.writeValueAsString(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-        );
-
-        mockMvc.perform(delete("/users"))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/users"))
-                .andExpect(content().json(objectMapper.writeValueAsString(List.of())));
+                .andExpect(jsonPath("$.*", hasSize(1)))
+                .andExpect(jsonPath("$..id").value(2));
     }
 }

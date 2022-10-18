@@ -17,7 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Sql(scripts = {"file:src/test/resources/test.sql"})
+@Sql(scripts = {"file:src/test/resources/test-schema.sql",
+        "file:src/test/resources/test-data-users-films.sql"})
 class GenreDbStorageTest {
     private final GenreDbStorage genreStorage;
 

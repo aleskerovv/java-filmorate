@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -11,9 +10,10 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component("userDbStorage")
@@ -29,11 +29,7 @@ public class UserDbStorage implements UserStorage {
     public List<User> getAll() {
         String query = "select * from users";
         List<User> users = jdbcTemplate.query(query, UserMapper::mapToUser);
-        users.forEach(user -> {
-            String friendsQuery = "select friend_id from friendships where user_id = ?";
-            List<Integer> friends = jdbcTemplate.queryForList(friendsQuery, Integer.class, user.getId());
-            user.setFriends(new HashSet<>(friends));
-        });
+        this.setFriendsId(users);
 
         return users;
     }
@@ -43,10 +39,8 @@ public class UserDbStorage implements UserStorage {
         try {
             String query = "select * from users where id = ?";
             User user = jdbcTemplate.queryForObject(query, UserMapper::mapToUser, id);
+            this.setFriendsId(user);
 
-            String friendsQuery = "select friend_id from friendships where user_id = ?";
-            List<Integer> friends = jdbcTemplate.queryForList(friendsQuery, Integer.class, id);
-            user.setFriends(new HashSet<>(friends));
             return user;
         } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException("id", String.format("user with id %d not found", id));
@@ -75,9 +69,8 @@ public class UserDbStorage implements UserStorage {
         if (user.getId() < 0) {
             throw new IllegalArgumentException("id cannot be negative");
         }
-        if (this.findById(user.getId()) == null) {
-            throw new NotFoundException("id", String.format("user with id=%d not found", user.getId()));
-        }
+        this.isUserExists(user.getId());
+
         String query = "update users set " +
                 "email = ?, login = ?, name = ?, birthday = ?" +
                 "where id = ?";
@@ -97,50 +90,74 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public void addFriend(Integer id, Integer friendsId) {
+    public void addFriend(Integer id, Integer friendId) {
+        this.isUserExists(id);
+        this.isUserExists(friendId);
         String query = "merge into friendships(user_id, friend_id) " +
                 "values (?, ?)";
-        jdbcTemplate.update(query, id, friendsId);
+        jdbcTemplate.update(query, id, friendId);
     }
 
     @Override
     public void deleteFriend(Integer id, Integer friendId) {
+        this.isUserExists(id);
+        this.isUserExists(friendId);
         String query = "delete from friendships where user_id = ? and friend_id = ?";
         jdbcTemplate.update(query, id, friendId);
     }
 
     @Override
     public List<User> getFriendsSet(Integer id) {
-        List<User> users = new ArrayList<>();
-        try {
-            String query = "select friend_id from friendships where user_id = ?";
-            List<Integer> idList = jdbcTemplate.queryForList(query, Integer.class, id);
-            users = idList.stream()
-                    .map(this::findById)
-                    .collect(Collectors.toList());
-        } catch (DataAccessException e) {
-            e.getMessage();
-        }
-        return users;
+        this.isUserExists(id);
+
+        String query = "select friend_id from friendships where user_id = ?";
+        List<Integer> idList = jdbcTemplate.queryForList(query, Integer.class, id);
+
+        return idList.stream()
+                .map(this::findById)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<User> getMutualFriendsSet(Integer id, Integer friendId) {
-        List<User> mutualFriends = new ArrayList<>();
-        try {
-            String query = "SELECT DISTINCT u.ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY \n " +
-                    "FROM USERS u \n " +
-                    "WHERE u.ID IN (SELECT DISTINCT f.FRIEND_ID \n " +
-                    "               from FRIENDSHIPS f \n " +
-                    "                        inner join (select FRIEND_ID from FRIENDSHIPS where USER_ID = ?) uf " +
-                    "on uf.FRIEND_ID = f.FRIEND_ID \n " +
-                    "               where USER_ID = ?)";
-            mutualFriends = jdbcTemplate.queryForStream(query, UserMapper::mapToUser, id, friendId)
-                    .collect(Collectors.toList());
-        } catch (DataAccessException e) {
-            e.getMessage();
-        }
+        this.isUserExists(id);
+        this.isUserExists(friendId);
 
-        return mutualFriends;
+        String query = "SELECT DISTINCT u.ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY " +
+                "FROM USERS u " +
+                "         JOIN (SELECT FRIEND_ID FROM FRIENDSHIPS WHERE USER_ID = ?) as uf ON u.ID = uf.FRIEND_ID " +
+                "         JOIN (SELECT f.FRIEND_ID " +
+                "               FROM FRIENDSHIPS f " +
+                "               WHERE USER_ID = ?) as mf ON mf.FRIEND_ID = uf.FRIEND_ID " +
+                "WHERE u.id = mf.FRIEND_ID;";
+
+        return jdbcTemplate.query(query, UserMapper::mapToUser, id, friendId);
+    }
+
+    private void setFriendsId(List<User> users) {
+        Map<Integer, User> usersMap = new HashMap<>();
+        users.forEach(user -> usersMap.put(user.getId(), user));
+
+        String friendsQuery = "select * from friendships";
+        jdbcTemplate.query(friendsQuery, rs -> {
+            usersMap.get(rs.getInt("user_id")).addFriend(rs.getInt("friend_id"));
+        });
+    }
+
+    private void setFriendsId(User user) {
+        String friendsQuery = "select * from friendships where user_id = ?";
+        jdbcTemplate.query(friendsQuery, rs -> {
+            Optional<Integer> friendId = Optional.of(rs.getInt("friend_id"));
+            friendId.ifPresent(user::addFriend);
+        }, user.getId());
+    }
+
+    private void isUserExists(Integer id) {
+        String sqlQuery = "select count(*) from users where id = ?";
+        int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
+        if (result != 1) {
+            throw new NotFoundException("id", String
+                    .format("user with id %d does not exists", id));
+        }
     }
 }

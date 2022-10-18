@@ -53,10 +53,14 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errors, headers, status);
     }
 
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler({Throwable.class})
-    protected String handleThrowable() {
-        return "An unexpected error has occurred";
+    public String handleThrowable(final Throwable e) {
+        String error = "Internal server error";
+        log.error(error);
+        e.printStackTrace();
+
+        return error;
     }
 
 }

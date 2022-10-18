@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,10 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Sql(scripts = {"file:src/test/resources/test.sql"})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Sql(scripts = {"file:src/test/resources/test-schema.sql",
+        "file:src/test/resources/test-data-users-films.sql"})
 class FilmDbStorageTest {
     private final FilmDbStorage filmStorage;
-    private final UserDbStorage userStorage;
 
     @Test
     void testFindById() {
@@ -45,7 +46,7 @@ class FilmDbStorageTest {
         assertThat(filmList)
                 .isPresent();
 
-        assertEquals(2, filmList.get().size());
+        assertEquals(3, filmList.get().size());
     }
 
     @Test
@@ -64,15 +65,15 @@ class FilmDbStorageTest {
         film.setDescription("desc for test");
         film.setReleaseDate(LocalDate.now());
         film.setDuration(180);
-        film.setRate(15);
         film.getMpa().setId(3);
 
         filmStorage.create(film);
-        film.setId(3);
+        film.setId(4);
         film.getMpa().setName("PG-13");
+        film.setRate(0);
 
         assertThat(film)
-                .isEqualTo(filmStorage.findById(3));
+                .isEqualTo(filmStorage.findById(4));
     }
 
     @Test
@@ -81,7 +82,6 @@ class FilmDbStorageTest {
 
         assertThat(filmToUpdate)
                 .isPresent();
-        filmToUpdate.get().setRate(25);
 
         filmStorage.update(filmToUpdate.get());
 
