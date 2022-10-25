@@ -124,8 +124,8 @@ public class UserDbStorage implements UserStorage {
         this.isUserExists(friendId);
 
         String query = "SELECT u.* FROM USERS u " +
-                "JOIN friendships uf ON u.user_id = uf.FRIEND_ID " +
-                "JOIN friendships f on u.user_id = f.FRIEND_ID " +
+                "JOIN friendships uf ON u.id = uf.FRIEND_ID " +
+                "JOIN friendships f on u.id = f.FRIEND_ID " +
                 "WHERE uf.friend_id = f.friend_id and uf.user_id=? and f.user_id=?";
 
         return jdbcTemplate.query(query, UserMapper::mapToUser, id, friendId);
