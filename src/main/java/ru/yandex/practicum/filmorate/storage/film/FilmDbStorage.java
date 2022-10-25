@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -14,10 +15,8 @@ import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.SQLException;
+import java.util.*;
 
 @Component("filmDbStorage")
 @Slf4j
@@ -75,16 +74,10 @@ public class FilmDbStorage implements FilmStorage {
             return stmt;
         }, keyHolder);
 
-
         Optional<Integer> id = Optional.of(keyHolder.getKey().intValue());
         film.setId(id.get());
 
-        if (!film.getGenres().isEmpty()) {
-            String query = "merge into films_genres(film_id, genre_id) \n" +
-                    "values (?, ?)";
-            film.getGenres()
-                    .forEach(genre -> jdbcTemplate.update(query, film.getId(), genre.getId()));
-        }
+        setGenres(film);
 
         return film;
     }
@@ -99,6 +92,7 @@ public class FilmDbStorage implements FilmStorage {
         String query = "update films set " +
                 "name = ?, description = ?, release_date = ?, duration = ?, mpa_rate_id = ?" +
                 " where id = ?";
+
         jdbcTemplate.update(query, film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
@@ -106,14 +100,31 @@ public class FilmDbStorage implements FilmStorage {
                 film.getMpa().getId(),
                 film.getId());
 
-        if (!film.getGenres().isEmpty()) {
-            String genresQuery = "merge into films_genres(film_id, genre_id) \n" +
-                    "values (?, ?)";
-            film.getGenres()
-                    .forEach(genre -> jdbcTemplate.update(genresQuery, film.getId(), genre.getId()));
-        }
+        setGenres(film);
 
         return findById(film.getId());
+    }
+
+    private void setGenres(Film film) {
+        if (!film.getGenres().isEmpty()) {
+            List<Genre> genres = new ArrayList<>(film.getGenres());
+            String genresQuery = "merge into films_genres(film_id, genre_id) \n" +
+                    "values (?, ?)";
+
+            jdbcTemplate.batchUpdate(genresQuery, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, film.getId());
+                    ps.setInt(2, genres.get(i).getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return genres.size();
+                }
+            });
+
+        }
     }
 
     @Override
@@ -152,7 +163,6 @@ public class FilmDbStorage implements FilmStorage {
         String query = "SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATE, f.MPA_RATE_ID, mr.name as mpa_name \n " +
                 "FROM FILMS f \n " +
                 "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
-                "GROUP BY f.ID \n " +
                 "ORDER BY f.rate DESC, f.ID " +
                 "LIMIT ? ";
 
