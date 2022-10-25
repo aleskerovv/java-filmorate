@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class InMemoryFilmStorage implements EntityStorage<Film> {
+public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Integer, Film> films = new HashMap<>();
 
     @Override
@@ -51,6 +51,31 @@ public class InMemoryFilmStorage implements EntityStorage<Film> {
     @Override
     public void deleteAll() {
         films.clear();
+    }
+
+    @Override
+    public void addLike(Integer filmId, Integer userId) {
+        films.get(filmId).addLike(userId);
+        log.info("like for film with id={} added", filmId);
+    }
+
+    @Override
+    public void deleteLike(Integer filmId, Integer userId) {
+        Film film = films.get(filmId);
+        if (!film.getLikes().contains(userId)) {
+            throw new NotFoundException("id",String.format("user with id=%d not found", userId));
+        }
+        film.deleteLike(userId);
+        log.info("like for film with id={} deleted", filmId);
+    }
+
+    @Override
+    public List<Film> getFilmsTop(Integer count) {
+        return films.values()
+                .stream()
+                .sorted(Comparator.comparingInt(f -> -f.getLikes().size()))
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     private Integer initId() {

@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
-import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.annotations.CorrectLogin;
 
 import javax.validation.constraints.*;
@@ -10,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@Component
 public class User {
     @PositiveOrZero(message = "must be positive")
     private int id;

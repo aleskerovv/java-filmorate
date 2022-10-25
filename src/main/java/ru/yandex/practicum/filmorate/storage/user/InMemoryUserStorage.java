@@ -1,19 +1,16 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-@Component
+@Component("userInMemoryStorage")
 @Slf4j
-public class InMemoryUserStorage implements EntityStorage<User> {
+public class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
 
     @Override
@@ -69,5 +66,41 @@ public class InMemoryUserStorage implements EntityStorage<User> {
             return 1;
         }
         return idList.get(idList.size() - 1) + 1;
+    }
+
+    @Override
+    public void addFriend(Integer id, Integer friendsId) {
+        if (!users.get(id).getFriends().contains(friendsId)) {
+            users.get(id).addFriend(friendsId);
+            users.get(friendsId).addFriend(id);
+            log.info("user with id {} added to friends list user with id {}", id, friendsId);
+        } else {
+            log.info("user with id {} already friend with id {}", id, friendsId);
+        }
+    }
+
+    @Override
+    public void deleteFriend(Integer id, Integer friendId) {
+        users.get(id).deleteFriend(friendId);
+        users.get(friendId).deleteFriend(id);
+        log.info("user with id {} deleted from friends list user with id {}", id, friendId);
+    }
+
+    @Override
+    public List<User> getFriendsSet(Integer id) {
+        return users.get(id).getFriends()
+                .stream()
+                .map(users::get)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> getMutualFriendsSet(Integer id, Integer friendId) {
+        Set<Integer> usersFriendsSet = new HashSet<>(users.get(id).getFriends());
+        Set<Integer> friendsSet = new HashSet<>(users.get(friendId).getFriends());
+        return usersFriendsSet.stream()
+                .filter(friendsSet::contains)
+                .map(users::get)
+                .collect(Collectors.toList());
     }
 }
