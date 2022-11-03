@@ -34,6 +34,7 @@ public class FilmService {
         filmStorage.addLike(filmId, userId);
         eventService.addNewEvent(userId, filmId, Event.EventType.LIKE, Event.Operation.ADD, TABLE_NAME);
         log.info("like for film with id={} added", filmId);
+
     }
 
     public void deleteLike(Integer filmId, Integer userId) {

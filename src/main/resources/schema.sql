@@ -119,3 +119,40 @@ create table if not exists EVENTS
     constraint EVENT_USER_FK
         foreign key (USER_ID) references USERS
 );
+
+create table if not exists REVIEWS
+(
+    REVIEW_ID           INTEGER auto_increment
+        primary key,
+    CONTENT         CHARACTER VARYING(100) not null,
+    IS_POSITIVE  CHARACTER(10),
+    USER_ID INTEGER,
+    FILM_ID     INTEGER,
+    USEFUL         INTEGER DEFAULT 0,
+    constraint FILMS_REVIEWS_FK
+        foreign key (FILM_ID) references FILMS ON DELETE CASCADE,
+    constraint USERS_REVIEWS_FK
+        foreign key (USER_ID) references USERS ON DELETE CASCADE
+);
+
+create table if not exists REVIEWS_LIKES
+(
+    REVIEW_ID INTEGER not null,
+    USER_ID INTEGER not null,
+    primary key (REVIEW_ID, USER_ID),
+    constraint USER_REVIEWS_LIKES_FK
+        foreign key (USER_ID) references USERS ON DELETE CASCADE,
+    constraint REVIEW_REVIEWS_LIKES_FK
+        foreign key (REVIEW_ID) references REVIEWS ON DELETE CASCADE
+);
+
+create table if not exists REVIEWS_DISLIKES
+(
+    REVIEW_ID INTEGER not null,
+    USER_ID INTEGER not null,
+    primary key (REVIEW_ID, USER_ID),
+    constraint USER_REVIEWS_DISLIKES_FK
+        foreign key (USER_ID) references USERS ON DELETE CASCADE,
+    constraint REVIEW_REVIEWS_DISLIKES_FK
+        foreign key (REVIEW_ID) references REVIEWS ON DELETE CASCADE
+);
