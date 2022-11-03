@@ -12,3 +12,8 @@ insert into users(email, login, name, birthday)
 values('user2@gmail.com', 'user2', 'user2', '19950101');
 insert into users(email, login, name, birthday)
 values('user3@mail.ru', 'user3', 'user3', '19650101');
+--reviews insert
+insert into reviews(content, is_positive, user_id, film_id)
+values('positive review for film 1 from user 1', true, 1, 1);
+insert into reviews(content, is_positive, user_id, film_id)
+values('negative review for film 2 from user 2', false, 2, 2);

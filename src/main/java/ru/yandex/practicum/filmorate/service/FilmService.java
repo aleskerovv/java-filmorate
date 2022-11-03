@@ -17,7 +17,8 @@ public class FilmService {
     private final UserStorage userStorage;
 
     @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
@@ -25,13 +26,13 @@ public class FilmService {
     public void addLike(Integer filmId, Integer userId) {
         userStorage.findById(userId);
         filmStorage.addLike(filmId, userId);
-        log.info("like for film with id={} added", filmId);
+
     }
 
     public void deleteLike(Integer filmId, Integer userId) {
         userStorage.findById(userId);
         filmStorage.deleteLike(filmId, userId);
-        log.info("like for film with id={} deleted", filmId);
+
     }
 
     public List<Film> getFilmsTop(Integer count) {

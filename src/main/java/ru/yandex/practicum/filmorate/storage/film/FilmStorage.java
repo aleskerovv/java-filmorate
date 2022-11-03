@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.storage.EntityStorage;
 import java.util.List;
 
 public interface FilmStorage extends EntityStorage<Film> {
+    List<Film> getAll();
     void addLike(Integer filmId, Integer userId);
     void deleteLike(Integer filmId, Integer userId);
     List<Film> getFilmsTop(Integer count);
