@@ -128,9 +128,8 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void deleteAll() {
-        String query = "DELETE FROM FILMS";
-        jdbcTemplate.update(query);
+    public void deleteById(Integer id) {
+        //for Andrey
     }
 
     @Override

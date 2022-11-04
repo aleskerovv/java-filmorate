@@ -53,8 +53,11 @@ public class FilmService {
         return filmStorage.update(film);
     }
 
-    public void deleteAllFilms() {
-        filmStorage.deleteAll();
+    public void deleteFilmById(Integer id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("id cannot be negative");
+        }
+        filmStorage.deleteById(id);
     }
 
     public Film findFilmById(Integer id) {

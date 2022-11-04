@@ -117,12 +117,4 @@ class FilmDbStorageTest {
                 .isNotEmpty()
                 .isEqualTo(List.of(filmStorage.findById(2), filmStorage.findById(1)));
     }
-
-    @Test
-    void deleteAll() {
-        filmStorage.deleteAll();
-
-        assertThat(filmStorage.getAll())
-                .isEmpty();
-    }
 }

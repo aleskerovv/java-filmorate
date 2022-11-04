@@ -53,8 +53,8 @@ public class FilmController {
         return filmService.getFilmsTop(count);
     }
 
-    @DeleteMapping
-    public void deleteAllFilms() {
-        filmService.deleteAllFilms();
+    @DeleteMapping("/{filmId}")
+    public void deleteFilmById(@PathVariable Integer filmId) {
+        filmService.deleteFilmById(filmId);
     }
 }

@@ -11,5 +11,5 @@ public interface EntityStorage<T> {
 
     T update(T t);
 
-    void deleteAll();
+    void deleteById(Integer id);
 }

@@ -55,7 +55,10 @@ public class UserService {
         return userStorage.findById(id);
     }
 
-    public void deleteAllUsers() {
-        userStorage.deleteAll();
+    public void deleteUserById(Integer id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("id must be positive");
+        }
+        userStorage.deleteById(id);
     }
 }

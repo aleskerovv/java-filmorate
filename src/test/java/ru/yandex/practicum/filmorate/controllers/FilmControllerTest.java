@@ -218,13 +218,4 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$.*", hasSize(1)))
                 .andExpect(jsonPath("$..description").value("test desc of third film"));
     }
-//
-//    @Test
-//    void deleteAllFilms() throws Exception {
-//        mockMvc.perform(delete("/films"))
-//                .andExpect(status().isOk());
-//        mockMvc.perform(get("/films"))
-//                .andExpect(jsonPath("$.*", hasSize(0)));
-//
-//    }
 }
