@@ -41,4 +41,8 @@ public class DirectorService {
         log.info("Delete director with id = {}", id);
         directorStorage.deleteById(id);
     }
+
+    public List<Director> getDirectorsByFilmId(int id) {
+        return directorStorage.getDirectorsByFilmId(id);
+    }
 }

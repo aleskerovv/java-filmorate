@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 
@@ -28,7 +29,11 @@ public class DirectorDbStorage implements DirectorStorage {
     @Override
     public Director findById(Integer id) {
         String sqlQuery = "SELECT * FROM DIRECTORS WHERE ID = ?";
-        return jdbcTemplate.queryForObject(sqlQuery, DirectorMapper::mapToDirector, id);
+        return jdbcTemplate.query(sqlQuery, DirectorMapper::mapToDirector, id)
+                .stream()
+                .findAny()
+                .orElseThrow(() -> new NotFoundException("id", String
+                        .format("Director with id = %d does not exist", id)));
     }
 
     @Override
@@ -48,6 +53,7 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public Director update(Director director) {
+        findById(director.getId());
         String sqlQuery = "UPDATE DIRECTORS SET NAME = ? WHERE ID = ?";
         jdbcTemplate.update(sqlQuery, director.getName(), director.getId());
         return director;
@@ -57,5 +63,14 @@ public class DirectorDbStorage implements DirectorStorage {
     public void deleteById(Integer id) {
         String sqlQuery = "DELETE DIRECTORS WHERE ID = ?";
         jdbcTemplate.update(sqlQuery, id);
+    }
+
+    @Override
+    public List<Director> getDirectorsByFilmId(int id) {
+        String sqlQuery = "SELECT D.* FROM FILMS_DIRECTORS " +
+                "INNER JOIN DIRECTORS D on D.ID = FILMS_DIRECTORS.DIRECTOR_ID " +
+                "WHERE FILM_ID = ? " +
+                "ORDER BY ID";
+        return jdbcTemplate.query(sqlQuery, DirectorMapper::mapToDirector, id);
     }
 }

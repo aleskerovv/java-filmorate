@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -10,8 +10,10 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.service.DirectorService;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -20,13 +22,11 @@ import java.util.*;
 
 @Component("filmDbStorage")
 @Slf4j
+@RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    private final DirectorService directorService;
 
     @Override
     public List<Film> getAll() {
@@ -79,12 +79,15 @@ public class FilmDbStorage implements FilmStorage {
 
         setGenres(film);
 
+        setDirectorsToFilm(film);
+
         return film;
     }
 
     @Override
     public Film update(Film film) {
-        this.isFilmExists(film.getId());
+        findById(film.getId());
+//        this.isFilmExists(film.getId());
 
         String deleteGenres = "delete from films_genres where film_id = ?";
         jdbcTemplate.update(deleteGenres, film.getId());
@@ -102,7 +105,23 @@ public class FilmDbStorage implements FilmStorage {
 
         setGenres(film);
 
+        setDirectorsToFilm(film);
+
         return findById(film.getId());
+    }
+
+    private void setDirectorsToFilm(Film film) {
+        String sqlQuery = "DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?";
+        jdbcTemplate.update(sqlQuery, film.getId());
+        if (!film.getDirectors().isEmpty()) {
+            int filmId = film.getId();
+            StringBuilder sb = new StringBuilder("INSERT INTO FILMS_DIRECTORS (FILM_ID, DIRECTOR_ID) VALUES");
+            for (Director director : film.getDirectors()) {
+                sb.append(" (").append(filmId).append(", ").append(director.getId()).append("),");
+            }
+            sb.setLength(sb.length() - 1);
+            jdbcTemplate.update(sb.toString());
+        }
     }
 
     private void setGenres(Film film) {
@@ -134,7 +153,8 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addLike(Integer filmId, Integer userId) {
-        this.isFilmExists(filmId);
+        findById(filmId);
+//        this.isFilmExists(filmId);
         String query = "merge into films_likes(film_id, user_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(query, filmId, userId);
@@ -147,7 +167,8 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void deleteLike(Integer filmId, Integer userId) {
-        this.isFilmExists(filmId);
+        findById(filmId);
+//        this.isFilmExists(filmId);
         String query = "delete from films_likes where film_id = ? and user_id = ?";
         jdbcTemplate.update(query, filmId, userId);
 
@@ -194,6 +215,8 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.query(likes, rs -> {
             filmMap.get(rs.getInt("film_id")).addLike(rs.getInt("user_id"));
         });
+
+        films.forEach(film -> film.setDirectors(new HashSet<>(directorService.getDirectorsByFilmId(film.getId()))));
     }
 
     private void setAttributes(Film film) {
@@ -217,14 +240,16 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.query(likes, rs -> {
             film.addLike(rs.getInt("user_id"));
         }, film.getId());
+
+        film.setDirectors(new HashSet<>(directorService.getDirectorsByFilmId(film.getId())));
     }
 
-    private void isFilmExists(Integer id) {
-        String sqlQuery = "select count(*) from films where id = ?";
-        int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
-        if (result != 1) {
-            throw new NotFoundException("id", String
-                    .format("film with id %d does not exists", id));
-        }
-    }
+//    private void isFilmExists(Integer id) {
+//        String sqlQuery = "select count(*) from films where id = ?";
+//        int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
+//        if (result != 1) {
+//            throw new NotFoundException("id", String
+//                    .format("film with id %d does not exists", id));
+//        }
+//    }
 }
