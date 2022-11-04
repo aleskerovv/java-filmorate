@@ -190,24 +190,30 @@ public class FilmDbStorage implements FilmStorage {
         Map<Integer, Film> filmMap = new HashMap<>();
         films.forEach(film -> filmMap.put(film.getId(), film));
 
-        String genres = "SELECT fg.film_id, g.* " +
-                "FROM films_genres fg " +
-                "LEFT JOIN genres g on fg.genre_id = g.genre_id " +
-                "ORDER BY fg.FILM_ID, fg.GENRE_ID";
+        if (!filmMap.isEmpty()) {
 
-        jdbcTemplate.query(genres, rs -> {
-            Genre genre = new Genre();
-            genre.setId(rs.getInt("genre_id"));
-            genre.setName(rs.getString("name"));
-            filmMap.get(rs.getInt("film_id")).getGenres().add(genre);
-        });
+            String genres = "SELECT fg.film_id, g.* " +
+                    "FROM films_genres fg " +
+                    "LEFT JOIN genres g on fg.genre_id = g.genre_id " +
+                    "ORDER BY fg.FILM_ID, fg.GENRE_ID";
 
-        String likes = "SELECT * " +
-                "FROM films_likes";
+            jdbcTemplate.query(genres, rs -> {
+                Genre genre = new Genre();
+                genre.setId(rs.getInt("genre_id"));
+                genre.setName(rs.getString("name"));
+                Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
+                        .ifPresent(f -> f.getGenres().add(genre));
+            });
 
-        jdbcTemplate.query(likes, rs -> {
-            filmMap.get(rs.getInt("film_id")).addLike(rs.getInt("user_id"));
-        });
+            String likes = "SELECT * " +
+                    "FROM films_likes";
+
+            jdbcTemplate.query(likes, rs -> {
+                Integer userId = rs.getInt("user_id");
+                Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
+                        .ifPresent(f -> f.addLike(userId));
+            });
+        }
     }
 
     private void setAttributes(Film film) {
