@@ -36,4 +36,9 @@ public class DirectorService {
         log.info("Updating director with id = {}", director.getId());
         return directorStorage.update(director);
     }
+
+    public void delete(int id) {
+        log.info("Delete director with id = {}", id);
+        directorStorage.deleteById(id);
+    }
 }
