@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 @RestController
@@ -56,5 +58,11 @@ public class FilmController {
     @DeleteMapping("/{filmId}")
     public void deleteFilmById(@PathVariable Integer filmId) {
         filmService.deleteFilmById(filmId);
+    }
+
+    @GetMapping("/search")
+    public List<Film> searchFilms(@RequestParam String query,
+                                  @RequestParam(defaultValue = "title") String by) {
+        return filmService.searchFilms(query, by);
     }
 }

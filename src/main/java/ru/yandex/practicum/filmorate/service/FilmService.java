@@ -67,4 +67,16 @@ public class FilmService {
     public List<Film> getAllFilms() {
         return filmStorage.getAll();
     }
+
+    public List<Film> searchFilms(String filter, String by) {
+        if (filter.isBlank()) {
+            throw new IllegalArgumentException("search string could not be blank");
+        }
+
+        if ("title".equals(by)) {
+            return filmStorage.searchFilmByTitle(filter);
+        } else {
+            throw new IllegalArgumentException("incorrect filter type");
+        }
+    }
 }

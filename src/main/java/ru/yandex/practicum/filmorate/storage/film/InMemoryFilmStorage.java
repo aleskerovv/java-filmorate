@@ -89,4 +89,10 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         return idList.get(idList.size() - 1) + 1;
     }
+
+    @Override
+    public List<Film> searchFilmByTitle(String query) {
+        // There is no realization
+        return null;
+    }
 }
