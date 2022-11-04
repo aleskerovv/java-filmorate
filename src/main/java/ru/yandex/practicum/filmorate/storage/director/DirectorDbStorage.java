@@ -48,7 +48,9 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public Director update(Director director) {
-        return null;
+        String sqlQuery = "UPDATE DIRECTORS SET NAME = ? WHERE ID = ?";
+        jdbcTemplate.update(sqlQuery, director.getName(), director.getId());
+        return director;
     }
 
     @Override

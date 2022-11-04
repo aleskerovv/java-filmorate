@@ -31,4 +31,9 @@ public class DirectorService {
         log.info("Creating a director");
         return directorStorage.create(director);
     }
+
+    public Director update(Director director) {
+        log.info("Updating director with id = {}", director.getId());
+        return directorStorage.update(director);
+    }
 }

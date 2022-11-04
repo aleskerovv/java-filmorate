@@ -28,4 +28,9 @@ public class DirectorController {
     public Director create(@RequestBody Director director) {
         return directorService.create(director);
     }
+
+    @PutMapping
+    public Director update(@RequestBody Director director) {
+        return directorService.update(director);
+    }
 }
