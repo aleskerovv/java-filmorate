@@ -2,7 +2,10 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -217,5 +220,40 @@ class FilmControllerTest {
         mockMvc.perform(get("/films/popular?count=1"))
                 .andExpect(jsonPath("$.*", hasSize(1)))
                 .andExpect(jsonPath("$..description").value("test desc of third film"));
+    }
+
+    @Test
+    @DisplayName("Check that film was found with correct reqParams")
+    void getFoundFilmsWithCorrectByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=film&by=title"))
+                .andExpect(jsonPath("$.*", hasSize(3)));
+    }
+
+    @Test
+    @DisplayName("Check that film was not found with incorrect reqParams")
+    void getFoundFilmsWithIncorrectByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=film&by=query"))
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("incorrect filter type",
+                        result.getResponse().getContentAsString()));
+    }
+
+    @ParameterizedTest()
+    @ValueSource(strings = {"", "    "})
+    @DisplayName("Check that film was not found with blank query")
+    void getFoundFilmsWithBlankOrEmptyQueryParam(String param) throws Exception {
+        mockMvc.perform(get("/films/search?query=" + param + "&by=query"))
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("search string could not be blank",
+                        result.getResponse().getContentAsString()));
+    }
+
+    @Test
+    @DisplayName("Check that film was found without reqParams")
+    void getFoundFilmsWithoutByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=film&by=title"))
+                .andExpect(jsonPath("$.*", hasSize(3)));
     }
 }

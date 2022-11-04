@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.storages;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,6 +12,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MpaCategory;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 
 import java.time.LocalDate;
@@ -116,5 +120,32 @@ class FilmDbStorageTest {
         assertThat(filmStorage.getFilmsTop(2))
                 .isNotEmpty()
                 .isEqualTo(List.of(filmStorage.findById(2), filmStorage.findById(1)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"film", "Film"})
+    @DisplayName("Check that film was found case-insensitive")
+    void test_searchFilmByTitle(String filter) {
+        assertThat(filmStorage.searchFilmByTitle(filter).size())
+                .isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("Check that film was found in correct order")
+    void test_searchFilmByTitleWithOrder() {
+        filmStorage.addLike(2, 2);
+        List<Film> found = filmStorage.searchFilmByTitle("film");
+
+        assertEquals(3, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("rate", 1);
+    }
+
+    @Test
+    @DisplayName("Check that film was not found")
+    void test_searchFilmByTitleWithNotExistName() {
+
+        assertThat(filmStorage.searchFilmByTitle("qwerty123"))
+                .isEmpty();
     }
 }

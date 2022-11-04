@@ -1,6 +1,6 @@
 --films insert
 insert into films(name, description, release_date, duration, mpa_rate_id)
-values ('first film', 'test desc of first film', '20220101', 100, 1);
+values ('first Film', 'test desc of first film', '20220101', 100, 1);
 insert into films(name, description, release_date, duration, mpa_rate_id)
 values ('second film', 'test desc of second film', '20220102', 100, 2);
 insert into films(name, description, release_date, duration, mpa_rate_id)
