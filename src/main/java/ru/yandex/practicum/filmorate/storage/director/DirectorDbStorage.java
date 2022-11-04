@@ -1,18 +1,20 @@
 package ru.yandex.practicum.filmorate.storage.director;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import ru.yandex.practicum.filmorate.mappers.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.storage.EntityStorage;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 
-@Component
+@Repository
 @RequiredArgsConstructor
+@Slf4j
 public class DirectorDbStorage implements DirectorStorage {
 
     private final JdbcTemplate jdbcTemplate;
@@ -31,7 +33,17 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public Director create(Director director) {
-        return null;
+        String sqlQuery = "INSERT INTO DIRECTORS (NAME) VALUES (?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"id"});
+            stmt.setString(1, director.getName());
+            return stmt;
+        }, keyHolder);
+        director.setId(keyHolder.getKey().intValue());
+        log.info("Director with id = {} added", director.getId());
+        return director;
     }
 
     @Override
