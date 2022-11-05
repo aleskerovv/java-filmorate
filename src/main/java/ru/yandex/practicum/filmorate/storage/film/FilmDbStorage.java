@@ -86,8 +86,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
-        findById(film.getId());
-//        this.isFilmExists(film.getId());
+        this.isFilmExists(film.getId());
 
         String deleteGenres = "delete from films_genres where film_id = ?";
         jdbcTemplate.update(deleteGenres, film.getId());
@@ -153,8 +152,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addLike(Integer filmId, Integer userId) {
-        findById(filmId);
-//        this.isFilmExists(filmId);
+        this.isFilmExists(filmId);
         String query = "merge into films_likes(film_id, user_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(query, filmId, userId);
@@ -167,8 +165,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void deleteLike(Integer filmId, Integer userId) {
-        findById(filmId);
-//        this.isFilmExists(filmId);
+        this.isFilmExists(filmId);
         String query = "delete from films_likes where film_id = ? and user_id = ?";
         jdbcTemplate.update(query, filmId, userId);
 
@@ -197,24 +194,30 @@ public class FilmDbStorage implements FilmStorage {
         Map<Integer, Film> filmMap = new HashMap<>();
         films.forEach(film -> filmMap.put(film.getId(), film));
 
-        String genres = "SELECT fg.film_id, g.* " +
-                "FROM films_genres fg " +
-                "LEFT JOIN genres g on fg.genre_id = g.genre_id " +
-                "ORDER BY fg.FILM_ID, fg.GENRE_ID";
+        if (!filmMap.isEmpty()) {
 
-        jdbcTemplate.query(genres, rs -> {
-            Genre genre = new Genre();
-            genre.setId(rs.getInt("genre_id"));
-            genre.setName(rs.getString("name"));
-            filmMap.get(rs.getInt("film_id")).getGenres().add(genre);
-        });
+            String genres = "SELECT fg.film_id, g.* " +
+                    "FROM films_genres fg " +
+                    "LEFT JOIN genres g on fg.genre_id = g.genre_id " +
+                    "ORDER BY fg.FILM_ID, fg.GENRE_ID";
 
-        String likes = "SELECT * " +
-                "FROM films_likes";
+            jdbcTemplate.query(genres, rs -> {
+                Genre genre = new Genre();
+                genre.setId(rs.getInt("genre_id"));
+                genre.setName(rs.getString("name"));
+                Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
+                        .ifPresent(f -> f.getGenres().add(genre));
+            });
 
-        jdbcTemplate.query(likes, rs -> {
-            filmMap.get(rs.getInt("film_id")).addLike(rs.getInt("user_id"));
-        });
+            String likes = "SELECT * " +
+                    "FROM films_likes";
+
+            jdbcTemplate.query(likes, rs -> {
+                Integer userId = rs.getInt("user_id");
+                Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
+                        .ifPresent(f -> f.addLike(userId));
+            });
+        }
 
         films.forEach(film -> film.setDirectors(new HashSet<>(directorService.getDirectorsByFilmId(film.getId()))));
     }
@@ -244,12 +247,44 @@ public class FilmDbStorage implements FilmStorage {
         film.setDirectors(new HashSet<>(directorService.getDirectorsByFilmId(film.getId())));
     }
 
-//    private void isFilmExists(Integer id) {
-//        String sqlQuery = "select count(*) from films where id = ?";
-//        int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
-//        if (result != 1) {
-//            throw new NotFoundException("id", String
-//                    .format("film with id %d does not exists", id));
-//        }
-//    }
+    private void isFilmExists(Integer id) {
+        String sqlQuery = "select count(*) from films where id = ?";
+        int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
+        if (result != 1) {
+            throw new NotFoundException("id", String
+                    .format("film with id %d does not exists", id));
+        }
+    }
+
+
+    @Override
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        List<Film> films;
+        switch (sortBy) {
+            case "year":
+                String sqlQueryYear = "SELECT F.ID, F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.RATE, F.MPA_RATE_ID, MR.NAME as MPA_NAME\n" +
+                        "FROM FILMS F\n" +
+                        "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
+                        "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +
+                        "WHERE FD.DIRECTOR_ID = ?\n" +
+                        "ORDER BY F.RELEASE_DATE ASC, F.ID";
+                films = jdbcTemplate.query(sqlQueryYear, FilmMapper::mapToFilm, directorId);
+                break;
+            case "likes":
+                String sqlQueryLikes = "SELECT F.*, MR.NAME as MPA_NAME, COUNT(FL.USER_ID)\n" +
+                        "FROM FILMS F\n" +
+                        "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
+                        "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +
+                        "LEFT OUTER JOIN FILMS_LIKES FL on F.ID = FL.FILM_ID\n" +
+                        "WHERE FD.DIRECTOR_ID = ?\n" +
+                        "GROUP BY F.ID, MR.NAME\n" +
+                        "ORDER BY COUNT(FL.USER_ID) DESC, F.ID";
+                films = jdbcTemplate.query(sqlQueryLikes, FilmMapper::mapToFilm, directorId);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid request parameter");
+        }
+        this.setAttributes(films);
+        return films;
+    }
 }

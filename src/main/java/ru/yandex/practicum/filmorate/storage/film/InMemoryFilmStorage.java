@@ -78,6 +78,11 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        return null;
+    }
+
     private Integer initId() {
         List<Integer> idList = getAll().stream()
                 .map(Film::getId)
