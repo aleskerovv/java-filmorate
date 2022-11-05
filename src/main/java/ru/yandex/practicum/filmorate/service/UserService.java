@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -13,18 +14,23 @@ import java.util.List;
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
+    private final EventService eventService;
+    private static final String TABLE_NAME = "users";
 
     @Autowired
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, EventService eventService) {
         this.userStorage = userStorage;
+        this.eventService = eventService;
     }
 
     public void addFriend(Integer id, Integer friendId) {
         userStorage.addFriend(id, friendId);
+        eventService.addNewEvent(id, friendId, Event.EventType.FRIEND, Event.Operation.ADD, TABLE_NAME);
     }
 
     public void deleteFriend(Integer id, Integer friendId) {
         userStorage.deleteFriend(id, friendId);
+        eventService.addNewEvent(id, friendId, Event.EventType.FRIEND, Event.Operation.REMOVE, TABLE_NAME);
     }
 
     public List<User> getFriendsSet(Integer id) {
