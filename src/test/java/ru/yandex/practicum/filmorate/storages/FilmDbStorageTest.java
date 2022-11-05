@@ -12,7 +12,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.MpaCategory;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 
 import java.time.LocalDate;
@@ -123,7 +122,7 @@ class FilmDbStorageTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"film", "Film"})
+    @ValueSource(strings = {"film", "Film", "IL"})
     @DisplayName("Check that film was found case-insensitive")
     void test_searchFilmByTitle(String filter) {
         assertThat(filmStorage.searchFilmByTitle(filter).size())
