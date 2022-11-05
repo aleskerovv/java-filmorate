@@ -32,8 +32,16 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(IllegalArgumentException.class)
-    protected String handleResourceNotFoundException(
+    protected String handleIllegalArgumentException(
             IllegalArgumentException ex) {
+        log.error(ex.getMessage());
+        return ex.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(UnsupportedOperationException.class)
+    protected String handleUnsupportedOperationException(
+            UnsupportedOperationException ex) {
         log.error(ex.getMessage());
         return ex.getMessage();
     }
