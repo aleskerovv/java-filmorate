@@ -9,7 +9,6 @@ import java.sql.Timestamp;
 @Data
 @Builder
 public class Event {
-    @Setter
     private int eventId;
     private final int userId;
     private final int entityId;
