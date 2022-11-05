@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.storages;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -128,4 +131,30 @@ class FilmDbStorageTest {
                 .isEqualTo(message);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"film", "Film", "IL"})
+    @DisplayName("Check that film was found case-insensitive")
+    void test_searchFilmByTitle(String filter) {
+        assertThat(filmStorage.searchFilmByTitle(filter).size())
+                .isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("Check that film was found in correct order")
+    void test_searchFilmByTitleWithOrder() {
+        filmStorage.addLike(2, 2);
+        List<Film> found = filmStorage.searchFilmByTitle("film");
+
+        assertEquals(3, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("rate", 1);
+    }
+
+    @Test
+    @DisplayName("Check that film was not found")
+    void test_searchFilmByTitleWithNotExistName() {
+
+        assertThat(filmStorage.searchFilmByTitle("qwerty123"))
+                .isEmpty();
+    }
 }
