@@ -84,8 +84,10 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public void deleteById(Integer id) {
-        //for Andrey
+    public void deleteById(Integer id) {        //for Andrey
+        this.isUserExists(id);
+        String query = "delete from users where id = ?";
+        jdbcTemplate.update(query, id);
     }
 
     @Override
@@ -149,6 +151,9 @@ public class UserDbStorage implements UserStorage {
     }
 
     private void isUserExists(Integer id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("id must be positive");
+        }
         String sqlQuery = "select count(*) from users where id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
         if (result != 1) {

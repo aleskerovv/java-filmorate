@@ -117,4 +117,15 @@ class FilmDbStorageTest {
                 .isNotEmpty()
                 .isEqualTo(List.of(filmStorage.findById(2), filmStorage.findById(1)));
     }
+
+    @Test
+    void test_deleteFilm() {
+        filmStorage.deleteById(1);
+        NotFoundException nfe = assertThrows(NotFoundException.class, () -> filmStorage.findById(1));
+        String message = "film with id 1 not found";
+
+        assertThat(nfe.getMessage())
+                .isEqualTo(message);
+    }
+
 }

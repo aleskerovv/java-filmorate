@@ -47,16 +47,10 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
-        if (film.getId() < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
-        }
         return filmStorage.update(film);
     }
 
     public void deleteFilmById(Integer id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
-        }
         filmStorage.deleteById(id);
     }
 

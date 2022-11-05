@@ -129,7 +129,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void deleteById(Integer id) {
-        //for Andrey
+        this.isFilmExists(id);
+        String query = "delete from films where id = ?";
+        jdbcTemplate.update(query, id);
     }
 
     @Override
@@ -220,6 +222,9 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void isFilmExists(Integer id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("id cannot be negative");
+        }
         String sqlQuery = "select count(*) from films where id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
         if (result != 1) {

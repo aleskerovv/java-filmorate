@@ -28,10 +28,6 @@ public class UserService {
     }
 
     public List<User> getFriendsSet(Integer id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("id must be positive");
-        }
-
         return userStorage.getFriendsSet(id);
     }
 
@@ -56,9 +52,6 @@ public class UserService {
     }
 
     public void deleteUserById(Integer id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("id must be positive");
-        }
         userStorage.deleteById(id);
     }
 }
