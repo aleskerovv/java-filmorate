@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.feed;
+package ru.yandex.practicum.filmorate.storage.event;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;

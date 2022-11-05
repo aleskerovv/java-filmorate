@@ -4,7 +4,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Event;
-import ru.yandex.practicum.filmorate.storage.feed.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 
 import java.sql.Timestamp;
 import java.time.Instant;

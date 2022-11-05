@@ -12,7 +12,7 @@ import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.feed.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 
 import java.util.List;
 
