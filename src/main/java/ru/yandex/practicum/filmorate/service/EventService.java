@@ -1,21 +1,29 @@
 package ru.yandex.practicum.filmorate.service;
 
-
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
-@RequiredArgsConstructor
 @Service
 public class EventService {
     private final EventDbStorage eventDbStorage;
+    private final UserStorage userStorage;
+
+    @Autowired
+    public EventService(@Qualifier("userDbStorage") UserStorage userStorage, EventDbStorage eventDbStorage) {
+        this.userStorage = userStorage;
+        this.eventDbStorage = eventDbStorage;
+    }
 
     public List<Event> getFeedByUserId(int id) {
+        //Try to find user by id to check if user exists. If not - NotFoundException is thrown
+        userStorage.findById(id);
         return eventDbStorage.getFeedByUserId(id);
     }
 
@@ -26,7 +34,7 @@ public class EventService {
                 .entityId(entityId)
                 .eventType(eventType)
                 .operation(operation)
-                .timestamp(Timestamp.from(Instant.now()))
+                .timestamp(LocalDateTime.now())
                 .build();
         eventDbStorage.addNewEvent(newEvent, tableName);
     }
