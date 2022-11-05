@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -13,24 +14,32 @@ import java.util.List;
 @Service
 @Slf4j
 public class FilmService {
+
+    private static final String TABLE_NAME = "films";
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final EventService eventService;
 
     @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage,
+                       EventService eventService) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.eventService = eventService;
     }
 
     public void addLike(Integer filmId, Integer userId) {
         userStorage.findById(userId);
         filmStorage.addLike(filmId, userId);
+        eventService.addNewEvent(userId, filmId, Event.EventType.LIKE, Event.Operation.ADD, TABLE_NAME);
         log.info("like for film with id={} added", filmId);
     }
 
     public void deleteLike(Integer filmId, Integer userId) {
         userStorage.findById(userId);
         filmStorage.deleteLike(filmId, userId);
+        eventService.addNewEvent(userId, filmId, Event.EventType.LIKE, Event.Operation.REMOVE, TABLE_NAME);
         log.info("like for film with id={} deleted", filmId);
     }
 
