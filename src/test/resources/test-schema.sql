@@ -1,3 +1,13 @@
+drop table if exists FILMS_DIRECTORS cascade;
+drop table if exists DIRECTORS cascade;
+drop table if exists FILMS_GENRES cascade;
+drop table if exists FILMS_LIKES cascade;
+drop table if exists FILMS cascade;
+drop table if exists FRIENDSHIPS cascade;
+drop table if exists GENRES cascade;
+drop table if exists MPA_RATING cascade;
+drop table if exists USERS cascade;
+
 --tables creating
 create table if not exists USERS
 (
@@ -67,6 +77,19 @@ create table if not exists FILMS_GENRES
         foreign key (FILM_ID) references FILMS,
     constraint FILM_GENRE_FK_1
         foreign key (GENRE_ID) references GENRES
+);
+
+CREATE TABLE IF NOT EXISTS DIRECTORS
+(
+    ID INTEGER PRIMARY KEY AUTO_INCREMENT,
+    NAME VARCHAR NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS FILMS_DIRECTORS
+(
+    FILM_ID INTEGER NOT NULL REFERENCES FILMS ON DELETE CASCADE,
+    DIRECTOR_ID INTEGER NOT NULL REFERENCES DIRECTORS ON DELETE CASCADE,
+    PRIMARY KEY (FILM_ID, DIRECTOR_ID)
 );
 
 --genres insert
