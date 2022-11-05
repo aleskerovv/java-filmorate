@@ -30,7 +30,6 @@ public class EventDbStorageTest {
     private final EventService eventService;
     private final UserService userService;
     private final FilmService filmService;
-    private final EventDbStorage eventDbStorage;
 
     @Test
     void shouldReturnEmptyFeedWhenNoEvents() {
@@ -113,7 +112,7 @@ public class EventDbStorageTest {
     @Test
     void shouldThrowNotFoundExceptionWhenUserIdIncorrect(){
         final NotFoundException e = assertThrows(NotFoundException.class,
-                () -> eventDbStorage.getFeedByUserId(-1));
-        assertEquals("user with id -1 does not exists", e.getMessage());
+                () -> eventService.getFeedByUserId(-1));
+        assertEquals("user with id -1 not found", e.getMessage());
     }
 }

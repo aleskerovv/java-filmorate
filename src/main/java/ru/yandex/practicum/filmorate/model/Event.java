@@ -2,9 +2,8 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.Setter;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -14,7 +13,7 @@ public class Event {
     private final int entityId;
     private final EventType eventType;
     private final Operation operation;
-    private final Timestamp timestamp;
+    private final LocalDateTime timestamp;
 
     public enum EventType{
         LIKE, REVIEW, FRIEND
