@@ -15,8 +15,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.time.Month;
-import java.util.List;
 
 import static java.time.Month.JANUARY;
 import static org.hamcrest.Matchers.hasSize;
@@ -27,7 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@Sql(scripts = {"file:src/test/resources/test-schema.sql", "file:src/test/resources/test-data-users-films.sql"})
+@Sql(scripts = {"file:src/test/resources/test-schema.sql",
+        "file:src/test/resources/test-data-users-films.sql"})
 class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;

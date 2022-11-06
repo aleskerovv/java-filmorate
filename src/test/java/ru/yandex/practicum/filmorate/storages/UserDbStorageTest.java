@@ -119,4 +119,16 @@ class UserDbStorageTest {
         assertThat(userStorage.getFriendsSet(1))
                 .isEmpty();
     }
+
+    @Test
+    void test_deleteUser() {
+        userStorage.deleteById(1);
+        NotFoundException nfe = assertThrows(NotFoundException.class, () -> userStorage.findById(1));
+        String message = "user with id 1 not found";
+
+        assertThat(nfe.getMessage())
+                .isEqualTo(message);
+    }
+
+
 }

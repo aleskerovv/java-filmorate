@@ -29,7 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@Sql(scripts = {"file:src/test/resources/test-schema.sql", "file:src/test/resources/test-data-users-films.sql"})
+@Sql(scripts = {"file:src/test/resources/test-schema.sql",
+        "file:src/test/resources/test-data-users-films.sql"})
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -165,11 +166,7 @@ class FilmControllerTest {
                         put("/films")
                                 .content(objectMapper.writeValueAsString(f))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof IllegalArgumentException))
-                .andExpect(result -> assertEquals("id cannot be negative",
-                        result.getResponse().getContentAsString()));
+                ).andExpect(status().isNotFound());
     }
 
     @Test
