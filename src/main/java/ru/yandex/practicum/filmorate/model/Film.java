@@ -31,6 +31,7 @@ public class Film {
     private MpaCategory mpa = new MpaCategory();
     private Set<Genre> genres = new TreeSet<>();
     private Set<Integer> likes = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
 
     public void addLike(Integer id) {
         likes.add(id);

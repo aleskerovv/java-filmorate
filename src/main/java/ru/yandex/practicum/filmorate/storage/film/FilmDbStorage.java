@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,8 +11,10 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.service.DirectorService;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -21,13 +23,11 @@ import java.util.*;
 
 @Component("filmDbStorage")
 @Slf4j
+@RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    private final DirectorService directorService;
 
     @Override
     public List<Film> getAll() {
@@ -80,6 +80,8 @@ public class FilmDbStorage implements FilmStorage {
 
         setGenres(film);
 
+        setDirectorsToFilm(film);
+
         return film;
     }
 
@@ -103,7 +105,31 @@ public class FilmDbStorage implements FilmStorage {
 
         setGenres(film);
 
+        setDirectorsToFilm(film);
+
         return film;
+    }
+
+    private void setDirectorsToFilm(Film film) {
+        String sqlQuery = "DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?";
+        jdbcTemplate.update(sqlQuery, film.getId());
+        if (!film.getDirectors().isEmpty()) {
+            List<Director> directors = new ArrayList<>(film.getDirectors());
+            sqlQuery = "MERGE INTO FILMS_DIRECTORS (FILM_ID, DIRECTOR_ID) VALUES (?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlQuery, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, film.getId());
+                    ps.setInt(2, directors.get(i).getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return directors.size();
+                }
+            });
+        }
     }
 
     private void setGenres(Film film) {
@@ -240,6 +266,19 @@ public class FilmDbStorage implements FilmStorage {
                         .ifPresent(f -> f.getGenres().add(genre));
             });
 
+            String directorsSql = "SELECT FD.FILM_ID, D.* " +
+                    "FROM FILMS_DIRECTORS FD " +
+                    "LEFT JOIN DIRECTORS D ON FD.DIRECTOR_ID = D.ID " +
+                    "ORDER BY FD.FILM_ID, FD.DIRECTOR_ID";
+
+            jdbcTemplate.query(directorsSql, rs -> {
+               Director director = new Director();
+               director.setId(rs.getInt("id"));
+               director.setName(rs.getString("name"));
+               Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
+                       .ifPresent(f -> f.getDirectors().add(director));
+            });
+
             String likes = "SELECT * " +
                     "FROM films_likes";
 
@@ -272,6 +311,8 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.query(likes, rs -> {
             film.addLike(rs.getInt("user_id"));
         }, film.getId());
+
+        film.setDirectors(new HashSet<>(directorService.getDirectorsByFilmId(film.getId())));
     }
 
     private void isFilmExists(Integer id) {
@@ -281,5 +322,37 @@ public class FilmDbStorage implements FilmStorage {
             throw new NotFoundException("id", String
                     .format("film with id %d does not exists", id));
         }
+    }
+
+
+    @Override
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        List<Film> films;
+        switch (sortBy) {
+            case "year":
+                String sqlQueryYear = "SELECT F.ID, F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.RATE, F.MPA_RATE_ID, MR.NAME as MPA_NAME\n" +
+                        "FROM FILMS F\n" +
+                        "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
+                        "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +
+                        "WHERE FD.DIRECTOR_ID = ?\n" +
+                        "ORDER BY F.RELEASE_DATE ASC, F.ID";
+                films = jdbcTemplate.query(sqlQueryYear, FilmMapper::mapToFilm, directorId);
+                break;
+            case "likes":
+                String sqlQueryLikes = "SELECT F.*, MR.NAME as MPA_NAME\n" +
+                        "FROM FILMS F\n" +
+                        "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
+                        "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +
+                        "LEFT OUTER JOIN FILMS_LIKES FL on F.ID = FL.FILM_ID\n" +
+                        "WHERE FD.DIRECTOR_ID = ?\n" +
+                        "GROUP BY F.ID, MR.NAME\n" +
+                        "ORDER BY COUNT(FL.USER_ID) DESC, F.ID";
+                films = jdbcTemplate.query(sqlQueryLikes, FilmMapper::mapToFilm, directorId);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid request parameter");
+        }
+        this.setAttributes(films);
+        return films;
     }
 }
