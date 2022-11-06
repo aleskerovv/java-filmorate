@@ -79,5 +79,5 @@ create table if not exists EVENTS
     ENTITY_ID         INTEGER                           not null,
     ENTITY_TABLE_NAME CHARACTER VARYING(64)             not null,
     constraint EVENT_USER_FK
-        foreign key (USER_ID) references USERS
+        foreign key (USER_ID) references USERS ON DELETE CASCADE
 );
