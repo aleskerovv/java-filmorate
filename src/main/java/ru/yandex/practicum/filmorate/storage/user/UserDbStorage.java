@@ -66,9 +66,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        if (user.getId() < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
-        }
         this.isUserExists(user.getId());
 
         String query = "update users set " +
@@ -152,7 +149,7 @@ public class UserDbStorage implements UserStorage {
 
     private void isUserExists(Integer id) {
         if (id < 0) {
-            throw new IllegalArgumentException("id must be positive");
+            throw new IllegalArgumentException("id cannot be negative");
         }
         String sqlQuery = "select count(*) from users where id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
