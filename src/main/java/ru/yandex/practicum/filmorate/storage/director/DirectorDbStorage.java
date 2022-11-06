@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.mappers.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -31,7 +30,7 @@ public class DirectorDbStorage implements DirectorStorage {
     public Director findById(Integer id) {
         String sqlQuery = "SELECT * FROM DIRECTORS WHERE ID = ?";
         try {
-            return Optional.ofNullable(jdbcTemplate.queryForObject(sqlQuery, DirectorMapper::mapToDirector, id)).get();
+            return jdbcTemplate.queryForObject(sqlQuery, DirectorMapper::mapToDirector, id);
         } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException("id", String.format("Director with id = %d does not exist", id));
         }
