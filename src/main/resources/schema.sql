@@ -121,5 +121,4 @@ create table if not exists REVIEWS_RATES
         foreign key (USER_ID) references USERS ON DELETE CASCADE,
     constraint REVIEW_REVIEWS_RATES_FK
         foreign key (REVIEW_ID) references REVIEWS ON DELETE CASCADE
-        foreign key (USER_ID) references USERS ON DELETE CASCADE
 );

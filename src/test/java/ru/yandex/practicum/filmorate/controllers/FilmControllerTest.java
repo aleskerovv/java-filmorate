@@ -166,7 +166,7 @@ class FilmControllerTest {
                         put("/films")
                                 .content(objectMapper.writeValueAsString(f))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isNotFound());
+                ).andExpect(status().isBadRequest());
     }
 
     @Test
