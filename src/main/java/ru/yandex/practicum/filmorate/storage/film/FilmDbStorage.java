@@ -198,6 +198,20 @@ public class FilmDbStorage implements FilmStorage {
         return filmsSorted;
     }
 
+    @Override
+    public List<Film> searchFilmByTitle(String filter) {
+        String sqlQuery = "SELECT f.*, mr.name as mpa_name " +
+                "FROM films f " +
+                "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
+                "WHERE LOWER(f.name) LIKE LOWER(?)" +
+                "ORDER BY f.rate DESC";
+
+        List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%"+filter+"%");
+        this.setAttributes(films);
+
+        return films;
+    }
+
     private void setAttributes(List<Film> films) {
         Map<Integer, Film> filmMap = new HashMap<>();
         films.forEach(film -> filmMap.put(film.getId(), film));

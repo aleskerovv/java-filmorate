@@ -94,4 +94,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         return idList.get(idList.size() - 1) + 1;
     }
+
+    @Override
+    public List<Film> searchFilmByTitle(String query) {
+        throw new UnsupportedOperationException("this type of operation not allowed");
+    }
 }

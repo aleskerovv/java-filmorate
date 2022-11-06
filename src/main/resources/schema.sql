@@ -42,7 +42,7 @@ create table if not exists FILMS
 
 create table if not exists GENRES
 (
-    GENRE_ID INTEGER  primary key,
+    GENRE_ID INTEGER primary key,
     NAME     CHARACTER VARYING(64) not null
 );
 
@@ -79,4 +79,17 @@ CREATE TABLE IF NOT EXISTS FILMS_DIRECTORS
   FILM_ID INTEGER NOT NULL REFERENCES FILMS ON DELETE CASCADE,
   DIRECTOR_ID INTEGER NOT NULL REFERENCES DIRECTORS ON DELETE CASCADE,
   PRIMARY KEY (FILM_ID, DIRECTOR_ID)
+
+create table if not exists EVENTS
+(
+    EVENT_ID          INTEGER auto_increment
+        primary key,
+    USER_ID           INTEGER                           not null,
+    TIMESTAMP         TIMESTAMP                         not null,
+    EVENT_TYPE        ENUM ('LIKE', 'REVIEW', 'FRIEND') not null,
+    OPERATION         ENUM ('REMOVE', 'ADD', 'UPDATE')  not null,
+    ENTITY_ID         INTEGER                           not null,
+    ENTITY_TABLE_NAME CHARACTER VARYING(64)             not null,
+    constraint EVENT_USER_FK
+        foreign key (USER_ID) references USERS
 );
