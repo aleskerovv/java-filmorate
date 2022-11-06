@@ -20,6 +20,8 @@ import java.util.Optional;
 @Slf4j
 public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbcTemplate;
+    private static final String DISLIKE = "DISLIKE";
+    private static final String LIKE = "LIKE";
 
     @Autowired
     public ReviewDbStorage(JdbcTemplate jdbcTemplate) {
@@ -83,9 +85,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review update(Review review) {
-        if (review.getReviewId() < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
-        }
+        this.isReviewExists(review.getReviewId());
 
         String query = "UPDATE reviews set " +
                 "content = ?, is_positive = ? " +
@@ -97,7 +97,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         log.info("updated review with id {}", review.getReviewId());
 
-        return findById(review.getReviewId());
+        return review;
     }
 
     @Override
@@ -116,7 +116,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         String checkQuery =
                 "SELECT review_id " +
-                        "FROM reviews_likes " +
+                        "FROM reviews_rates " +
                         "WHERE user_id = ? " +
                         "AND review_id = ?;";
 
@@ -128,15 +128,11 @@ public class ReviewDbStorage implements ReviewStorage {
                     reviewId, userId));
         }
 
-        String query = "merge into reviews_likes(review_id, user_id) " +
-                "values (?, ?)";
-        jdbcTemplate.update(query, reviewId, userId);
+        String query = "merge into reviews_rates(review_id, user_id, rate) " +
+                "values (?, ?, ?)";
+        jdbcTemplate.update(query, reviewId, userId, LIKE);
 
-        String updateReviewUseful = "UPDATE reviews " +
-                "SET useful = useful + 1 " +
-                "WHERE review_id = ?";
-
-        jdbcTemplate.update(updateReviewUseful, reviewId);
+        this.increaseReviewRate(reviewId);
 
         log.info("user with id {} liked review with id {}", userId, reviewId);
     }
@@ -146,7 +142,7 @@ public class ReviewDbStorage implements ReviewStorage {
         this.isReviewExists(reviewId);
 
         String checkQuery = "SELECT review_id " +
-                        "FROM reviews_likes " +
+                        "FROM reviews_rates " +
                         "WHERE user_id = ? " +
                         "AND review_id = ?;";
 
@@ -158,15 +154,11 @@ public class ReviewDbStorage implements ReviewStorage {
                     reviewId, userId));
         }
 
-        String query = "delete from reviews_likes " +
-                "where review_id = ? and user_id = ?";
-        jdbcTemplate.update(query, reviewId, userId);
+        String query = "delete from reviews_rates " +
+                "where review_id = ? and user_id = ? and rate = ?";
+        jdbcTemplate.update(query, reviewId, userId, LIKE);
 
-        String updateReviewUseful = "UPDATE reviews " +
-                "SET useful = useful - 1 " +
-                "WHERE review_id = ?";
-
-        jdbcTemplate.update(updateReviewUseful, reviewId);
+        this.decreaseReviewRate(reviewId);
 
         log.info("user with id {} removed like from review with id {}", userId, reviewId);
     }
@@ -176,7 +168,7 @@ public class ReviewDbStorage implements ReviewStorage {
         this.isReviewExists(reviewId);
 
         String checkQuery = "SELECT review_id " +
-                        "FROM reviews_dislikes " +
+                        "FROM reviews_rates " +
                         "WHERE user_id = ? " +
                         "AND review_id = ?;";
 
@@ -188,15 +180,11 @@ public class ReviewDbStorage implements ReviewStorage {
                     reviewId, userId));
         }
 
-        String query = "merge into reviews_dislikes(review_id, user_id) " +
-                "values (?, ?)";
-        jdbcTemplate.update(query, reviewId, userId);
+        String query = "merge into reviews_rates(review_id, user_id, rate) " +
+                "values (?, ?, ?)";
+        jdbcTemplate.update(query, reviewId, userId, DISLIKE);
 
-        String updateReviewUseful = "UPDATE reviews " +
-                "SET useful = useful - 1 " +
-                "WHERE review_id = ?";
-
-        jdbcTemplate.update(updateReviewUseful, reviewId);
+        this.decreaseReviewRate(reviewId);
 
         log.info("user with id {} disliked review with id {}", userId, reviewId);
     }
@@ -206,7 +194,7 @@ public class ReviewDbStorage implements ReviewStorage {
         this.isReviewExists(reviewId);
 
         String checkQuery = "SELECT review_id " +
-                        "FROM reviews_dislikes " +
+                        "FROM reviews_rates " +
                         "WHERE user_id = ? " +
                         "AND review_id = ?;";
 
@@ -218,17 +206,29 @@ public class ReviewDbStorage implements ReviewStorage {
                     reviewId, userId));
         }
 
-        String query = "delete from reviews_dislikes " +
-                "where review_id = ? and user_id = ?";
-        jdbcTemplate.update(query, reviewId, userId);
+        String query = "delete from reviews_rates " +
+                "where review_id = ? and user_id = ? and rate = ?";
+        jdbcTemplate.update(query, reviewId, userId, DISLIKE);
 
+        this.increaseReviewRate(reviewId);
+
+        log.info("user with id {} removed dislike from review with id {}", userId, reviewId);
+    }
+
+    private void increaseReviewRate(Integer id) {
         String updateReviewUseful = "UPDATE reviews " +
                 "SET useful = useful + 1 " +
                 "WHERE review_id = ?";
 
-        jdbcTemplate.update(updateReviewUseful, reviewId);
+        jdbcTemplate.update(updateReviewUseful, id);
+    }
 
-        log.info("user with id {} removed dislike from review with id {}", userId, reviewId);
+    private void decreaseReviewRate(Integer id) {
+        String updateReviewUseful = "UPDATE reviews " +
+                "SET useful = useful - 1 " +
+                "WHERE review_id = ?";
+
+        jdbcTemplate.update(updateReviewUseful, id);
     }
 
     private void isReviewExists(Integer id) {

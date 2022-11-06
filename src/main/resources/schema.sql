@@ -135,24 +135,14 @@ create table if not exists REVIEWS
         foreign key (USER_ID) references USERS ON DELETE CASCADE
 );
 
-create table if not exists REVIEWS_LIKES
+create table if not exists REVIEWS_RATES
 (
     REVIEW_ID INTEGER not null,
     USER_ID INTEGER not null,
+    RATE CHARACTER VARYING(10),
     primary key (REVIEW_ID, USER_ID),
-    constraint USER_REVIEWS_LIKES_FK
+    constraint USER_REVIEWS_RATES_FK
         foreign key (USER_ID) references USERS ON DELETE CASCADE,
-    constraint REVIEW_REVIEWS_LIKES_FK
-        foreign key (REVIEW_ID) references REVIEWS ON DELETE CASCADE
-);
-
-create table if not exists REVIEWS_DISLIKES
-(
-    REVIEW_ID INTEGER not null,
-    USER_ID INTEGER not null,
-    primary key (REVIEW_ID, USER_ID),
-    constraint USER_REVIEWS_DISLIKES_FK
-        foreign key (USER_ID) references USERS ON DELETE CASCADE,
-    constraint REVIEW_REVIEWS_DISLIKES_FK
+    constraint REVIEW_REVIEWS_RATES_FK
         foreign key (REVIEW_ID) references REVIEWS ON DELETE CASCADE
 );
