@@ -245,6 +245,7 @@ public class FilmDbStorage implements FilmStorage {
                             "FROM films f " +
                             "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
                             "WHERE LOWER(f.name) LIKE LOWER(?)" +
+                            "GROUP BY f.id " +
                             "ORDER BY f.rate DESC";
                     break;
 
@@ -255,6 +256,7 @@ public class FilmDbStorage implements FilmStorage {
                             "JOIN films f ON fd.film_id = f.id " +
                             "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
                             "WHERE LOWER(d.name) LIKE LOWER(?)" +
+                            "GROUP BY f.id " +
                             "ORDER BY f.rate DESC";
                     break;
 
@@ -276,6 +278,7 @@ public class FilmDbStorage implements FilmStorage {
                     "JOIN films f ON fd.film_id = f.id " +
                     "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
                     "WHERE LOWER(d.name) LIKE LOWER(?) " +
+                    "GROUP BY f.id " +
                     "ORDER BY rate DESC";
 
             films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%"+filter+"%", "%"+filter+"%");
