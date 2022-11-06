@@ -102,7 +102,7 @@ public class FilmDbStorage implements FilmStorage {
 
         setGenres(film);
 
-        return findById(film.getId());
+        return film;
     }
 
     private void setGenres(Film film) {
