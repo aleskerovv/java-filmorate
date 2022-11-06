@@ -61,7 +61,7 @@ public class UserDbStorage implements UserStorage {
 
         log.info("created user with id {}", user.getId());
 
-        return user;
+        return findById(user.getId());
     }
 
     @Override
