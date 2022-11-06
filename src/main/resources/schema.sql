@@ -43,7 +43,7 @@ create table if not exists FILMS
 
 create table if not exists GENRES
 (
-    GENRE_ID INTEGER  primary key,
+    GENRE_ID INTEGER primary key,
     NAME     CHARACTER VARYING(64) not null
 );
 
@@ -104,4 +104,18 @@ create table if not exists REVIEWS_DISLIKES
         foreign key (USER_ID) references USERS ON DELETE CASCADE,
     constraint REVIEW_REVIEWS_DISLIKES_FK
         foreign key (REVIEW_ID) references REVIEWS ON DELETE CASCADE
+);
+
+create table if not exists EVENTS
+(
+    EVENT_ID          INTEGER auto_increment
+        primary key,
+    USER_ID           INTEGER                           not null,
+    TIMESTAMP         TIMESTAMP                         not null,
+    EVENT_TYPE        ENUM ('LIKE', 'REVIEW', 'FRIEND') not null,
+    OPERATION         ENUM ('REMOVE', 'ADD', 'UPDATE')  not null,
+    ENTITY_ID         INTEGER                           not null,
+    ENTITY_TABLE_NAME CHARACTER VARYING(64)             not null,
+    constraint EVENT_USER_FK
+        foreign key (USER_ID) references USERS
 );
