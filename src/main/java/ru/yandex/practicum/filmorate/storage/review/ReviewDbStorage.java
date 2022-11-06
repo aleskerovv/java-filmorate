@@ -28,17 +28,17 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public List<Review> getReviewsByParameters(Integer filmId, int count) {
-        String query = "SELECT * FROM reviews " +
-                "ORDER BY useful DESC " +
-                "LIMIT ?";
         List<Review> reviews;
         if (filmId != null) {
-            query = "SELECT * FROM reviews " +
+            String query = "SELECT * FROM reviews " +
                     "WHERE film_id = ? " +
                     "ORDER BY useful DESC " +
                     "LIMIT ?";
             reviews = jdbcTemplate.query(query, ReviewMapper::mapToReview, filmId, count);
         } else {
+            String query = "SELECT * FROM reviews " +
+                    "ORDER BY useful DESC " +
+                    "LIMIT ?";
             reviews = jdbcTemplate.query(query, ReviewMapper::mapToReview, count);
         }
 

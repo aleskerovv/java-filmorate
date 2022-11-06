@@ -153,7 +153,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void when_FilmsId_isNegative_andStatusIs400() throws Exception {
+    void when_FilmsId_isNegative_andStatusIs404() throws Exception {
         Film f = new Film();
         f.setId(-1);
         f.setName("Test film");
@@ -165,10 +165,10 @@ class FilmControllerTest {
                         put("/films")
                                 .content(objectMapper.writeValueAsString(f))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isNotFound())
+                ).andExpect(status().isBadRequest())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof IllegalArgumentException))
-                .andExpect(result -> assertEquals("id cannot be negative",
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(result -> assertEquals("{\"id\":\"must be positive\"}",
                         result.getResponse().getContentAsString()));
     }
 

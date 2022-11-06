@@ -29,7 +29,7 @@ public class ReviewController {
     }
 
     @PutMapping
-    public Review updateReview(@RequestBody Review review) {
+    public Review updateReview(@Valid @RequestBody Review review) {
         return reviewService.updateReview(review);
     }
 

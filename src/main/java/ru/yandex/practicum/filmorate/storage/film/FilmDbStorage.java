@@ -175,8 +175,8 @@ public class FilmDbStorage implements FilmStorage {
         if (jdbcTemplate
                 .query(checkQuery, (rs, n) -> rs.getInt("film_id"), userId, filmId)
                 .isEmpty()) {
-            throw new NotFoundException("film", String.format("User with id %d already liked film with id %d",
-                    filmId, userId));
+            throw new NotFoundException("film", String.format("like from user with id %d to film with id %d not found",
+                    userId, filmId));
         }
 
         String query = "delete from films_likes where film_id = ? and user_id = ?";
@@ -192,7 +192,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsTop(Integer count) {
-        String query = "SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATE, f.MPA_RATE_ID, mr.name as mpa_name \n " +
+        String query = "SELECT f.*, mr.name as mpa_name \n " +
                 "FROM FILMS f \n " +
                 "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
                 "ORDER BY f.rate DESC, f.ID " +
