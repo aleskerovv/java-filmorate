@@ -81,13 +81,19 @@ public class FilmService {
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
-    public List<Film> searchFilms(String filter, String by) {
+    public List<Film> searchFilms(String filter, List<String> by) {
         if (filter.isBlank()) {
             throw new IllegalArgumentException("search string could not be blank");
         }
 
-        if ("title".equals(by)) {
-            return filmStorage.searchFilmByTitle(filter);
+        if ((by.size() == 1
+                && (by.get(0).equals("title") || by.get(0).equals("director")))
+                || (by.size() == 2
+                    && by.stream().anyMatch(b -> b.equals("title"))
+                    && by.stream().anyMatch(b -> b.equals("director")))) {
+
+            return filmStorage.searchFilm(filter, by);
+
         } else {
             throw new IllegalArgumentException("incorrect filter type");
         }
