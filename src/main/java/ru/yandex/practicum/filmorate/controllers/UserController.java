@@ -2,7 +2,9 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
@@ -12,10 +14,12 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
     UserService userService;
+    EventService eventService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, EventService eventService) {
         this.userService = userService;
+        this.eventService = eventService;
     }
 
     @GetMapping
@@ -61,5 +65,10 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public void deleteUserById(@PathVariable Integer userId) {
         userService.deleteUserById(userId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> getFeedByUserId(@PathVariable int id){
+        return eventService.getFeedByUserId(id);
     }
 }
