@@ -113,13 +113,21 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery = "DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?";
         jdbcTemplate.update(sqlQuery, film.getId());
         if (!film.getDirectors().isEmpty()) {
-            int filmId = film.getId();
-            StringBuilder sb = new StringBuilder("INSERT INTO FILMS_DIRECTORS (FILM_ID, DIRECTOR_ID) VALUES");
-            for (Director director : film.getDirectors()) {
-                sb.append(" (").append(filmId).append(", ").append(director.getId()).append("),");
-            }
-            sb.setLength(sb.length() - 1);
-            jdbcTemplate.update(sb.toString());
+            List<Director> directors = new ArrayList<>(film.getDirectors());
+            sqlQuery = "MERGE INTO FILMS_DIRECTORS (FILM_ID, DIRECTOR_ID) VALUES (?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlQuery, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, film.getId());
+                    ps.setInt(2, directors.get(i).getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return directors.size();
+                }
+            });
         }
     }
 
@@ -209,6 +217,19 @@ public class FilmDbStorage implements FilmStorage {
                         .ifPresent(f -> f.getGenres().add(genre));
             });
 
+            String directorsSql = "SELECT FD.FILM_ID, D.* " +
+                    "FROM FILMS_DIRECTORS FD " +
+                    "LEFT JOIN DIRECTORS D ON FD.DIRECTOR_ID = D.ID " +
+                    "ORDER BY FD.FILM_ID, FD.DIRECTOR_ID";
+
+            jdbcTemplate.query(directorsSql, rs -> {
+               Director director = new Director();
+               director.setId(rs.getInt("id"));
+               director.setName(rs.getString("name"));
+               Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
+                       .ifPresent(f -> f.getDirectors().add(director));
+            });
+
             String likes = "SELECT * " +
                     "FROM films_likes";
 
@@ -218,8 +239,6 @@ public class FilmDbStorage implements FilmStorage {
                         .ifPresent(f -> f.addLike(userId));
             });
         }
-
-        films.forEach(film -> film.setDirectors(new HashSet<>(directorService.getDirectorsByFilmId(film.getId()))));
     }
 
     private void setAttributes(Film film) {
@@ -271,7 +290,7 @@ public class FilmDbStorage implements FilmStorage {
                 films = jdbcTemplate.query(sqlQueryYear, FilmMapper::mapToFilm, directorId);
                 break;
             case "likes":
-                String sqlQueryLikes = "SELECT F.*, MR.NAME as MPA_NAME, COUNT(FL.USER_ID)\n" +
+                String sqlQueryLikes = "SELECT F.*, MR.NAME as MPA_NAME\n" +
                         "FROM FILMS F\n" +
                         "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
                         "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +

@@ -80,7 +80,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByDirector(int directorId, String sortBy) {
-        return null;
+        throw new UnsupportedOperationException("this type of operation not allowed");
     }
 
     private Integer initId() {

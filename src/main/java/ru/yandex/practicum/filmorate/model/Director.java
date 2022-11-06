@@ -8,7 +8,7 @@ import javax.validation.constraints.PositiveOrZero;
 @Data
 public class Director {
     @PositiveOrZero(message = "must be positive")
-    int id;
+    private int id;
     @NotBlank(message = "can not be blank")
-    String name;
+    private String name;
 }
