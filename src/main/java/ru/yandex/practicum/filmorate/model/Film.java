@@ -11,6 +11,7 @@ import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Data
 @Accessors(chain = true)
@@ -28,7 +29,7 @@ public class Film {
     private Integer rate;
     @NonNull
     private MpaCategory mpa = new MpaCategory();
-    private Set<Genre> genres = new HashSet<>();
+    private Set<Genre> genres = new TreeSet<>();
     private Set<Integer> likes = new HashSet<>();
 
     public void addLike(Integer id) {
@@ -37,5 +38,9 @@ public class Film {
 
     public void deleteLike(Integer id) {
         likes.remove(id);
+    }
+
+    public void setGenres(Set<Genre> genres) {
+        this.genres = new TreeSet<>(genres);
     }
 }
