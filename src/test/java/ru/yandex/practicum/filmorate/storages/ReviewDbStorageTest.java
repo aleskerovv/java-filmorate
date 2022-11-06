@@ -81,7 +81,7 @@ class ReviewDbStorageTest {
     @Test
     void test_ReviewNotFound() {
         NotFoundException nfe = assertThrows(NotFoundException.class, () -> reviewStorage.findById(16));
-        String message = "review with id 16 not found";
+        String message = "review with id 16 does not exists";
 
         Assertions.assertThat(nfe.getMessage())
                 .isEqualTo(message);
