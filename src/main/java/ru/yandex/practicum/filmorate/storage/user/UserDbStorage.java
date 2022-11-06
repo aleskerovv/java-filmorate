@@ -66,9 +66,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        if (user.getId() < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
-        }
         this.isUserExists(user.getId());
 
         String query = "update users set " +
@@ -84,8 +81,10 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public void deleteById(Integer id) {
-        //for Andrey
+    public void deleteById(Integer id) {        //for Andrey
+        this.isUserExists(id);
+        String query = "delete from users where id = ?";
+        jdbcTemplate.update(query, id);
     }
 
     @Override

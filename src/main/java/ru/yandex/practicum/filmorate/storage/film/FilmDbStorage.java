@@ -106,7 +106,7 @@ public class FilmDbStorage implements FilmStorage {
 
         setDirectorsToFilm(film);
 
-        return findById(film.getId());
+        return film;
     }
 
     private void setDirectorsToFilm(Film film) {
@@ -155,7 +155,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void deleteById(Integer id) {
-        //for Andrey
+        this.isFilmExists(id);
+        String query = "delete from films where id = ?";
+        jdbcTemplate.update(query, id);
     }
 
     @Override
