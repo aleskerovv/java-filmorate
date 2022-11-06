@@ -242,9 +242,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void isFilmExists(Integer id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
-        }
         String sqlQuery = "select count(*) from films where id = ?";
         int result = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
         if (result != 1) {
