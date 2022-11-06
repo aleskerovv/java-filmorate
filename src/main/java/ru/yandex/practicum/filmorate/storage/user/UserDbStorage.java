@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
@@ -77,6 +78,8 @@ public class UserDbStorage implements UserStorage {
                 user.getBirthday(),
                 user.getId());
 
+        log.info("updated user with id {}", user.getId());
+
         return findById(user.getId());
     }
 
@@ -91,17 +94,48 @@ public class UserDbStorage implements UserStorage {
     public void addFriend(Integer id, Integer friendId) {
         this.isUserExists(id);
         this.isUserExists(friendId);
+
+        String checkQuery =
+                "SELECT user_id " +
+                        "FROM friendships " +
+                        "WHERE friend_id = ? " +
+                        "AND user_id = ?;";
+
+        if (!jdbcTemplate
+                .query(checkQuery, (rs, n) -> rs.getInt("user_id"), friendId, id)
+                .isEmpty()) {
+            throw new DuplicateEventException(String.format("User with id %d already friend with user with id %d",
+                    friendId, id));
+        }
+
         String query = "merge into friendships(user_id, friend_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(query, id, friendId);
+
+        log.info("user with id {} added to friend list user with id {}", id, friendId);
     }
 
     @Override
     public void deleteFriend(Integer id, Integer friendId) {
         this.isUserExists(id);
         this.isUserExists(friendId);
+
+        String checkQuery =
+                "SELECT user_id " +
+                        "FROM friendships " +
+                        "WHERE friend_id = ? " +
+                        "AND user_id = ?;";
+
+        if (jdbcTemplate
+                .query(checkQuery, (rs, n) -> rs.getInt("user_id"), friendId, id)
+                .isEmpty()) {
+            throw new NotFoundException("user", String.format("User with id %d not friend with user with id %d",
+                    friendId, id));
+        }
+
         String query = "delete from friendships where user_id = ? and friend_id = ?";
         jdbcTemplate.update(query, id, friendId);
+        log.info("user with id {} removed from friend list user with id {}", id, friendId);
     }
 
     @Override

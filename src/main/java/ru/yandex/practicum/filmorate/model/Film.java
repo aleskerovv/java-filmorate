@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Length;
 import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
 
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 @Data
+@Accessors(chain = true)
 public class Film {
     @PositiveOrZero(message = "must be positive")
     private int id;

@@ -4,17 +4,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.AbstractStorage;
+import ru.yandex.practicum.filmorate.storage.AbstractDictionary;
 
 import java.util.List;
 
 @Service
 @Slf4j
 public class GenreService {
-    private final AbstractStorage<Genre> genreStorage;
+    private final AbstractDictionary<Genre> genreStorage;
 
     @Autowired
-    public GenreService(AbstractStorage<Genre> genreStorage) {
+    public GenreService(AbstractDictionary<Genre> genreStorage) {
         this.genreStorage = genreStorage;
     }
 

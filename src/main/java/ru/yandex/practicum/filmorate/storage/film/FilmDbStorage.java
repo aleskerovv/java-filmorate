@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
@@ -163,6 +164,20 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void addLike(Integer filmId, Integer userId) {
         this.isFilmExists(filmId);
+
+        String checkQuery =
+                "SELECT film_id " +
+                        "FROM films_likes " +
+                        "WHERE user_id = ? " +
+                        "AND film_id = ?;";
+
+        if (!jdbcTemplate
+                .query(checkQuery, (rs, n) -> rs.getInt("film_id"), userId, filmId)
+                .isEmpty()) {
+            throw new DuplicateEventException(String.format("User with id %d already liked film with id %d",
+                    filmId, userId));
+        }
+
         String query = "merge into films_likes(film_id, user_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(query, filmId, userId);
@@ -171,11 +186,27 @@ public class FilmDbStorage implements FilmStorage {
                 "set rate = rate + 1 \n " +
                 "where id = ?";
         jdbcTemplate.update(updateFilmRate, filmId);
+
+        log.info("like for film with id={} added", filmId);
     }
 
     @Override
     public void deleteLike(Integer filmId, Integer userId) {
         this.isFilmExists(filmId);
+
+        String checkQuery =
+                "SELECT film_id " +
+                        "FROM films_likes " +
+                        "WHERE user_id = ? " +
+                        "AND film_id = ?;";
+
+        if (jdbcTemplate
+                .query(checkQuery, (rs, n) -> rs.getInt("film_id"), userId, filmId)
+                .isEmpty()) {
+            throw new NotFoundException("film", String.format("like from user with id %d to film with id %d not found",
+                    userId, filmId));
+        }
+
         String query = "delete from films_likes where film_id = ? and user_id = ?";
         jdbcTemplate.update(query, filmId, userId);
 
@@ -183,11 +214,13 @@ public class FilmDbStorage implements FilmStorage {
                 "set rate = rate - 1 \n " +
                 "where id = ?";
         jdbcTemplate.update(updateFilmRate, filmId);
+
+        log.info("like for film with id={} deleted", filmId);
     }
 
     @Override
     public List<Film> getFilmsTop(Integer count) {
-        String query = "SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATE, f.MPA_RATE_ID, mr.name as mpa_name \n " +
+        String query = "SELECT f.*, mr.name as mpa_name \n " +
                 "FROM FILMS f \n " +
                 "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
                 "ORDER BY f.rate DESC, f.ID " +

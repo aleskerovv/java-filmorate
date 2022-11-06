@@ -25,9 +25,9 @@ create table if not exists FRIENDSHIPS
     FRIEND_ID INTEGER not null,
     primary key (USER_ID, FRIEND_ID),
     constraint FRIENDS_FRIENDSHIP_ID
-        foreign key (FRIEND_ID) references USERS,
+        foreign key (FRIEND_ID) references USERS ON DELETE CASCADE,
     constraint USERS_FRIENDSHIP_ID
-        foreign key (USER_ID) references USERS
+        foreign key (USER_ID) references USERS ON DELETE CASCADE
 );
 
 create table if not exists MPA_RATING
@@ -74,9 +74,9 @@ create table if not exists FILMS_GENRES
     GENRE_ID INTEGER not null,
     primary key (FILM_ID, GENRE_ID),
     constraint FILM_FILM_FK_1
-        foreign key (FILM_ID) references FILMS,
+        foreign key (FILM_ID) references FILMS ON DELETE CASCADE,
     constraint FILM_GENRE_FK_1
-        foreign key (GENRE_ID) references GENRES
+        foreign key (GENRE_ID) references GENRES ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS DIRECTORS

@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.storage.EntityStorage;
 import java.util.List;
 
 public interface UserStorage extends EntityStorage<User> {
+    List<User> getAll();
     void addFriend(Integer id, Integer friendsId);
     void deleteFriend(Integer id, Integer friendId);
     List<User> getFriendsSet(Integer id);
