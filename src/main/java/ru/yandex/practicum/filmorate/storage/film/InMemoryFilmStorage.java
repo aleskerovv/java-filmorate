@@ -96,7 +96,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> searchFilmByTitle(String query) {
+    public List<Film> searchFilm(String query, List<String> by) {
         throw new UnsupportedOperationException("this type of operation not allowed");
     }
 }

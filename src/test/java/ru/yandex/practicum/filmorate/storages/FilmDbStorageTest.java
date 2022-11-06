@@ -135,7 +135,7 @@ class FilmDbStorageTest {
     @ValueSource(strings = {"film", "Film", "IL"})
     @DisplayName("Check that film was found case-insensitive")
     void test_searchFilmByTitle(String filter) {
-        assertThat(filmStorage.searchFilmByTitle(filter).size())
+        assertThat(filmStorage.searchFilm(filter, List.of("title")).size())
                 .isEqualTo(3);
     }
 
@@ -143,7 +143,7 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was found in correct order")
     void test_searchFilmByTitleWithOrder() {
         filmStorage.addLike(2, 2);
-        List<Film> found = filmStorage.searchFilmByTitle("film");
+        List<Film> found = filmStorage.searchFilm("film", List.of("title"));
 
         assertEquals(3, found.size());
         assertThat(found.get(0))
@@ -154,7 +154,7 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was not found")
     void test_searchFilmByTitleWithNotExistName() {
 
-        assertThat(filmStorage.searchFilmByTitle("qwerty123"))
+        assertThat(filmStorage.searchFilm("qwerty123", List.of("title")))
                 .isEmpty();
     }
 }
