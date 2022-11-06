@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -18,14 +19,17 @@ public class FilmService {
     private static final String TABLE_NAME = "films";
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
     private final EventService eventService;
 
     @Autowired
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
+                       DirectorStorage directorStorage,
                        EventService eventService) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.directorStorage = directorStorage;
         this.eventService = eventService;
     }
 
@@ -69,6 +73,11 @@ public class FilmService {
 
     public List<Film> getAllFilms() {
         return filmStorage.getAll();
+    }
+
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        directorStorage.findById(directorId);
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
     public List<Film> searchFilms(String filter, String by) {
