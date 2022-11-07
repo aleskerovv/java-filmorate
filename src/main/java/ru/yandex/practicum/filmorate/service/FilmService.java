@@ -98,4 +98,11 @@ public class FilmService {
             throw new IllegalArgumentException("incorrect filter type");
         }
     }
+
+    public List<Film> getCommonFilms(Integer userId, Integer friendsId) {
+        userStorage.findById(userId);
+        userStorage.findById(friendsId);
+
+        return filmStorage.getCommonFilms(userId, friendsId);
+    }
 }

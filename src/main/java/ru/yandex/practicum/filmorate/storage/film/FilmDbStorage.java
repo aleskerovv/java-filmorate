@@ -289,6 +289,22 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
+    public List<Film> getCommonFilms(Integer userId, Integer friendsId) {
+        String sqlQuery = "SELECT f.*, mr.name as mpa_name " +
+                "FROM films_likes fl " +
+                "JOIN films f ON fl.film_id = f.id " +
+                "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
+                "WHERE fl.user_id = ? OR fl.user_id = ?" +
+                "GROUP BY fl.film_id " +
+                "HAVING COUNT(fl.film_id) > 1 " +
+                "ORDER BY f.rate DESC;";
+
+        List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, userId, friendsId);
+        this.setAttributes(films);
+
+        return films;
+    }
+
     private void setAttributes(List<Film> films) {
         Map<Integer, Film> filmMap = new HashMap<>();
         films.forEach(film -> filmMap.put(film.getId(), film));
