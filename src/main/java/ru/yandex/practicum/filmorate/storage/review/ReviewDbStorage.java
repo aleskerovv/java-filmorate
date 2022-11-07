@@ -7,7 +7,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.ReviewMapper;
@@ -86,16 +85,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review update(Review review) {
-
-        //Checks if author of review/film matches with old id in database
-        Review oldReview = findById(review.getReviewId());
-        if (!review.getFilmId().equals(oldReview.getFilmId())){
-            throw new BadRequestException(String.format("review with id=%s was not updated, expected film id=%s," +
-                    " actual film id = %s", review.getReviewId(), oldReview.getFilmId(), review.getFilmId()));
-        } else if (!review.getUserId().equals(oldReview.getUserId())){
-            throw new BadRequestException(String.format("review with id=%s was not updated, expected user id=%s," +
-                    " actual user id = %s", review.getReviewId(), oldReview.getFilmId(), review.getFilmId()));
-        }
+        this.isReviewExists(review.getReviewId());
 
         String query = "UPDATE reviews set " +
                 "content = ?, is_positive = ? " +
@@ -106,8 +96,8 @@ public class ReviewDbStorage implements ReviewStorage {
                 review.getReviewId());
 
         log.info("updated review with id {}", review.getReviewId());
-
-        return review;
+        //Необходимо запрашивать обновленный из базы, т.к. в присланном теле запроса может быть неверный фильм/юзер
+        return findById(review.getReviewId());
     }
 
     @Override
