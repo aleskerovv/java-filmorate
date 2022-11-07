@@ -99,4 +99,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     public List<Film> searchFilm(String query, List<String> by) {
         throw new UnsupportedOperationException("this type of operation not allowed");
     }
+
+    @Override
+    public List<Film> getCommonFilms(Integer userId, Integer friendsId) {
+        throw new UnsupportedOperationException("this type of operation not allowed");
+    }
 }
