@@ -1,9 +1,10 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -13,7 +14,8 @@ public class Event {
     private final int entityId;
     private final EventType eventType;
     private final Operation operation;
-    private final LocalDateTime timestamp;
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
+    private final Date timestamp;
 
     public enum EventType{
         LIKE, REVIEW, FRIEND

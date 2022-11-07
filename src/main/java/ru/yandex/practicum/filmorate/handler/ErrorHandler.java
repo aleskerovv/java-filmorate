@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 
@@ -32,8 +33,8 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(DuplicateEventException.class)
-    protected String handleDuplicateEventException(DuplicateEventException ex) {
+    @ExceptionHandler({BadRequestException.class})
+    protected String handleBadRequestException(BadRequestException ex) {
         log.error(ex.getMessage());
         return ex.getMessage();
     }
