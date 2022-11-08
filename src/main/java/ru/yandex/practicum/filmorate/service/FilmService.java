@@ -48,13 +48,12 @@ public class FilmService {
         log.info("like for film with id={} deleted", filmId);
     }
 
-    public List<Film> getFilmsTop(Integer count) {
+    public List<Film> getFilmsTop(Integer count, Integer genreId, Integer year) {
         if (count < 0) {
             throw new IllegalArgumentException("field 'count' must be positive");
         }
-        return filmStorage.getFilmsTop(count);
+        return filmStorage.getFilmsTop(count, genreId, year);
     }
-
 
     public Film createFilm(Film film) {
         return filmStorage.create(film);
@@ -89,8 +88,8 @@ public class FilmService {
         if ((by.size() == 1
                 && (by.get(0).equals("title") || by.get(0).equals("director")))
                 || (by.size() == 2
-                    && by.stream().anyMatch(b -> b.equals("title"))
-                    && by.stream().anyMatch(b -> b.equals("director")))) {
+                && by.stream().anyMatch(b -> b.equals("title"))
+                && by.stream().anyMatch(b -> b.equals("director")))) {
 
             return filmStorage.searchFilm(filter, by);
 
