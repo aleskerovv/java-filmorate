@@ -105,6 +105,6 @@ public class InMemoryUserStorage implements UserStorage {
     }
     @Override
     public List<Integer> getIdUsersWithSimilarInterests(Integer id) {
-        throw new NotFoundException("Метод поиск пользователя с похожими интересами", "Метод не реализован");
+        throw new UnsupportedOperationException("Метод поиск пользователя с похожими интересами не реализован");
     }
 }

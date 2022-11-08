@@ -69,21 +69,20 @@ public class UserService {
     }
 
     public List<Film> getRecommendations(Integer idRecommendedUser, Integer limitFilms) {
-
-        if (getIdUsersWithSimilarInterests(idRecommendedUser).isEmpty()) return new ArrayList<>();
         List<Integer> usersWithSimilarInterests = getIdUsersWithSimilarInterests(idRecommendedUser);
+        if (usersWithSimilarInterests.isEmpty()) return new ArrayList<>();
         log.info("Compiled a list of users with similar interests " + usersWithSimilarInterests);
-        List<Integer> idRecommendationsFilms = idsFilmsRecommendations(usersWithSimilarInterests,
+        List<Integer> idRecommendationsFilms = getIdsFilmsRecomendations(usersWithSimilarInterests,
                 idRecommendedUser, limitFilms);
         List<Film> recommendationsFilms = filmsByIDFromList(idRecommendationsFilms);
         return recommendationsFilms;
     }
 
-    public List<Integer> getIdUsersWithSimilarInterests(int id) {
+    private List<Integer> getIdUsersWithSimilarInterests(int id) {
         return userStorage.getIdUsersWithSimilarInterests(id);
     }
 
-    public List<Film> filmsByIDFromList(List<Integer> ids) {
+    private List<Film> filmsByIDFromList(List<Integer> ids) {
         List<Film> films = new ArrayList<>();
         for (Integer i : ids) {
             films.add(filmStorage.findById(i));
@@ -92,8 +91,8 @@ public class UserService {
         return films;
     }
 
-    public List<Integer> idsFilmsRecommendations(List<Integer> usersWithSimilarInterests,
-                                                 Integer idRecommendedUser, Integer limit) {
+    private List<Integer> getIdsFilmsRecomendations(List<Integer> usersWithSimilarInterests,
+                                                    Integer idRecommendedUser, Integer limit) {
         List<Integer> filmsRecomendations = new ArrayList<>();
         for (Integer i : usersWithSimilarInterests) {
             log.info("Get recommendations from the user id " + i);
@@ -111,3 +110,4 @@ public class UserService {
         return filmsRecomendations;
     }
 }
+
