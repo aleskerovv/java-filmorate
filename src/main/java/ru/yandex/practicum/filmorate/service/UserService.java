@@ -73,23 +73,8 @@ public class UserService {
         if (getIdUsersWithSimilarInterests(idRecommendedUser).isEmpty()) return new ArrayList<>();
         List<Integer> usersWithSimilarInterests = getIdUsersWithSimilarInterests(idRecommendedUser);
         log.info("Compiled a list of users with similar interests " + usersWithSimilarInterests);
-
-
-        // пока только ближайший пользователь,чтобы хотя бы тесты пройти
-        Integer idUserWithClosestInterests = usersWithSimilarInterests.get(0);
-        log.info("User with similar interests has id " + getIdUsersWithSimilarInterests(idRecommendedUser).get(0));
-        List<Integer> idRecommendationsFilms = filmStorage.getRecommendations(idUserWithClosestInterests,
-                idRecommendedUser);
-        log.info("We have a films recommendation list with id " + idRecommendationsFilms);
-
-
-        /*
-        //До лучших времен. Хотя тестил - вроде тоже всё работает.
-                List<Integer> idRecommendationsFilms = idsFilmsRecommendations(usersWithSimilarInterests,
+        List<Integer> idRecommendationsFilms = idsFilmsRecommendations(usersWithSimilarInterests,
                 idRecommendedUser, limitFilms);
-        */
-
-
         List<Film> recommendationsFilms = filmsByIDFromList(idRecommendationsFilms);
         return recommendationsFilms;
     }
@@ -115,7 +100,7 @@ public class UserService {
             List<Integer> idFilmsRecommendedByUser = filmStorage.getRecommendations(i,
                     idRecommendedUser);
             log.info("User id " + i + " recommends movies " + idFilmsRecommendedByUser);
-            for (int j = 0; (j<idFilmsRecommendedByUser.size())&&(filmsRecomendations.size()<limit); j++) {
+            for (int j = 0; (j < idFilmsRecommendedByUser.size()) && (filmsRecomendations.size() < limit); j++) {
                 Integer idFilm = idFilmsRecommendedByUser.get(j);
                 if (!filmsRecomendations.contains(idFilm)) {
                     filmsRecomendations.add(idFilm);
