@@ -98,7 +98,7 @@ class FilmDbStorageTest {
         filmStorage.addLike(1, 2);
 
         assertThat(filmStorage.findById(1))
-                .hasFieldOrPropertyWithValue("likes", Set.of(2,3));
+                .hasFieldOrPropertyWithValue("likes", Set.of(2));
     }
 
     @Test
@@ -106,11 +106,11 @@ class FilmDbStorageTest {
         filmStorage.addLike(1, 2);
 
         assertThat(filmStorage.findById(1))
-                .hasFieldOrPropertyWithValue("likes", Set.of(2,3));
+                .hasFieldOrPropertyWithValue("likes", Set.of(2));
 
         filmStorage.deleteLike(1, 2);
         assertThat(filmStorage.findById(1))
-                .hasFieldOrPropertyWithValue("likes", Set.of(3));
+                .hasFieldOrPropertyWithValue("likes", Set.of());
     }
 
     @Test
@@ -123,7 +123,6 @@ class FilmDbStorageTest {
     }
 
     @Test
- //   @Sql(scripts = {"file:src/test/resources/test-data-popular.sql"})
     void test_getFilmsTopByLikesWithGenre() {
         assertThat(filmStorage.getFilmsTop(2,1,-1))
                 .isNotEmpty()
@@ -131,7 +130,6 @@ class FilmDbStorageTest {
     }
 
     @Test
- //   @Sql(scripts = {"file:src/test/resources/test-data-popular.sql"})
     void test_getFilmsTopByLikesWithYear() {
         assertThat(filmStorage.getFilmsTop(2,-1,2020))
                 .isNotEmpty()
