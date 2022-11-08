@@ -227,6 +227,13 @@ class FilmControllerTest {
     }
 
     @Test
+    @DisplayName("Check that film was found with correct list of reqParams")
+    void getFoundFilmsWithCorrectListOfByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=st&by=title,director"))
+                .andExpect(jsonPath("$.*", hasSize(1)));
+    }
+
+    @Test
     @DisplayName("Check that film was not found with incorrect reqParams")
     void getFoundFilmsWithIncorrectByParam() throws Exception {
         mockMvc.perform(get("/films/search?query=film&by=query"))
@@ -252,5 +259,15 @@ class FilmControllerTest {
     void getFoundFilmsWithoutByParam() throws Exception {
         mockMvc.perform(get("/films/search?query=film&by=title"))
                 .andExpect(jsonPath("$.*", hasSize(3)));
+    }
+
+    @Test
+    @DisplayName("Check that film was not found with incorrect list of reqParams")
+    void getFoundFilmsWithIncorrectListOfByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=st&by=title,director222"))
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("incorrect filter type",
+                        result.getResponse().getContentAsString()));
     }
 }

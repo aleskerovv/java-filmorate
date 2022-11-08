@@ -28,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Sql(scripts = {"file:src/test/resources/test-schema.sql",
-        "file:src/test/resources/test-data-users-films.sql"})
+        "file:src/test/resources/test-data-users-films.sql",
+        "file:src/test/resources/test-data-directors.sql"})
 class FilmDbStorageTest {
     private final FilmDbStorage filmStorage;
 
@@ -135,7 +136,7 @@ class FilmDbStorageTest {
     @ValueSource(strings = {"film", "Film", "IL"})
     @DisplayName("Check that film was found case-insensitive")
     void test_searchFilmByTitle(String filter) {
-        assertThat(filmStorage.searchFilmByTitle(filter).size())
+        assertThat(filmStorage.searchFilm(filter, List.of("title")).size())
                 .isEqualTo(3);
     }
 
@@ -143,7 +144,7 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was found in correct order")
     void test_searchFilmByTitleWithOrder() {
         filmStorage.addLike(2, 2);
-        List<Film> found = filmStorage.searchFilmByTitle("film");
+        List<Film> found = filmStorage.searchFilm("film", List.of("title"));
 
         assertEquals(3, found.size());
         assertThat(found.get(0))
@@ -154,7 +155,42 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was not found")
     void test_searchFilmByTitleWithNotExistName() {
 
-        assertThat(filmStorage.searchFilmByTitle("qwerty123"))
+        assertThat(filmStorage.searchFilm("qwerty123", List.of("title")))
                 .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"EN", "En", "en"})
+    @DisplayName("Check that film was found case-insensitive")
+    void test_searchFilmByDirector(String filter) {
+        assertThat(filmStorage.searchFilm(filter, List.of("director")).size())
+                .isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Check that film was found in correct order")
+    void test_searchFilmByDirectorWithOrder() {
+        filmStorage.addLike(1, 2);
+        List<Film> found = filmStorage.searchFilm("en", List.of("director"));
+
+        assertEquals(2, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("rate", 1);
+    }
+
+    @Test
+    @DisplayName("Check that film was not found")
+    void test_searchFilmByDirectorWithNotExistName() {
+
+        assertThat(filmStorage.searchFilm("qwerty123", List.of("director")))
+                .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ST", "St", "st"})
+    @DisplayName("Check that film was found case-insensitive")
+    void test_searchFilmByTitleAndDirector(String filter) {
+        assertThat(filmStorage.searchFilm(filter, List.of("director", "title")).size())
+                .isEqualTo(1);
     }
 }

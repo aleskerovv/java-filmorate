@@ -11,5 +11,5 @@ public interface FilmStorage extends EntityStorage<Film> {
     void deleteLike(Integer filmId, Integer userId);
     List<Film> getFilmsTop(Integer count);
     List<Film> getFilmsByDirector(int directorId, String sortBy);
-    List<Film> searchFilmByTitle(String filter);
+    List<Film> searchFilm(String filter, List<String> by);
 }
