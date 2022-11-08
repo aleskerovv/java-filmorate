@@ -202,6 +202,7 @@ class FilmDbStorageTest {
         filmStorage.addLike(2, 2);
         filmStorage.addLike(2, 1);
         filmStorage.addLike(1, 3);
+        filmStorage.addLike(3, 1);
 
         List<Film> found = filmStorage.getCommonFilms(1, 2);
 
