@@ -11,4 +11,5 @@ public interface UserStorage extends EntityStorage<User> {
     void deleteFriend(Integer id, Integer friendId);
     List<User> getFriendsSet(Integer id);
     List<User> getMutualFriendsSet(Integer id, Integer friendId);
+    List<Integer> getIdUsersWithSimilarInterests(Integer id);
 }

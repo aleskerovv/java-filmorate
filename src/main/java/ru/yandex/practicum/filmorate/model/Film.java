@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Length;
-import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
+import ru.yandex.practicum.filmorate.annotations.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PositiveOrZero;

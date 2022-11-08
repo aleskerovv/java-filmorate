@@ -7,7 +7,7 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.*;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -188,5 +188,14 @@ public class UserDbStorage implements UserStorage {
             throw new NotFoundException("id", String
                     .format("user with id %d does not exists", id));
         }
+    }
+    @Override
+    public List<Integer> getIdUsersWithSimilarInterests(Integer userId) {
+        String sql = "SELECT fl2.user_id " +
+                "FROM films_likes AS fl1 JOIN films_likes AS fl2 ON fl1.film_id = fl2.film_id " +
+                "WHERE fl1.user_id = ? AND fl1.user_id<>fl2.user_id " +
+                "GROUP BY fl1.user_id , fl2.user_id " +
+                "ORDER BY COUNT(fl1.film_id) DESC ";
+        return jdbcTemplate.queryForList(sql, Integer.class, userId);
     }
 }
