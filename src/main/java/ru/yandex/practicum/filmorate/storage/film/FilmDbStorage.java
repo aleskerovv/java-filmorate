@@ -219,19 +219,43 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getFilmsTop(Integer count) {
-        String query = "SELECT f.*, mr.name as mpa_name \n " +
-                "FROM FILMS f \n " +
-                "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
-                "ORDER BY f.rate DESC, f.ID " +
-                "LIMIT ? ";
-
-        List<Film> filmsSorted = jdbcTemplate.query(query, FilmMapper::mapToFilm, count);
-
-        this.setAttributes(filmsSorted);
-
-        return filmsSorted;
-    }
+    public List<Film> getFilmsTop(Integer count, Integer genreId, Integer year) {
+        String query;
+        if ((genreId == -1) && (year == -1)) {
+            query = "SELECT f.*, mr.name as mpa_name \n " +
+                    "FROM FILMS f \n " +
+                    "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
+                    "ORDER BY f.rate DESC, f.ID " +
+                    "LIMIT ? ";
+        } else if ((genreId == -1) && (year != -1)) {
+                query = "SELECT f.*, mr.name as mpa_name \n " +
+                        "FROM FILMS f \n " +
+                        "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
+                        "WHERE EXTRACT(YEAR FROM f.RELEASE_DATE) = " + year +
+                        " ORDER BY f.rate DESC, f.ID " +
+                        "LIMIT ? ";
+            } else if ((genreId != -1) && (year == -1)) {
+                query = "SELECT f.*, mr.name as mpa_name \n " +
+                        "FROM FILMS f \n " +
+                        "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
+                        "left join FILMS_GENRES FG on f.ID = FG.FILM_ID " +
+                        "WHERE FG.GENRE_ID = " + genreId +
+                        " ORDER BY f.rate DESC, f.ID " +
+                        "LIMIT ? ";
+            } else {
+                query = "SELECT f.*, mr.name as mpa_name \n " +
+                        "FROM FILMS f \n " +
+                        "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
+                        "left join FILMS_GENRES FG on f.ID = FG.FILM_ID " +
+                        "WHERE FG.GENRE_ID = " + genreId +
+                        " AND EXTRACT(YEAR FROM f.RELEASE_DATE) = " + year +
+                        " ORDER BY f.rate DESC, f.ID " +
+                        "LIMIT ? ";
+            }
+            List<Film> filmsSorted = jdbcTemplate.query(query, FilmMapper::mapToFilm, count);
+            this.setAttributes(filmsSorted);
+            return filmsSorted;
+        }
 
     @Override
     public List<Film> searchFilm(String filter, List<String> by) {

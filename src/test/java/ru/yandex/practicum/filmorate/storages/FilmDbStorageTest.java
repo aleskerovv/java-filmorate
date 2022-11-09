@@ -117,9 +117,30 @@ class FilmDbStorageTest {
     void test_getFilmsTopByLikes() {
         filmStorage.addLike(2, 2);
 
-        assertThat(filmStorage.getFilmsTop(2))
+        assertThat(filmStorage.getFilmsTop(2,-1,-1))
                 .isNotEmpty()
                 .isEqualTo(List.of(filmStorage.findById(2), filmStorage.findById(1)));
+    }
+
+    @Test
+    void test_getFilmsTopByLikesWithGenre() {
+        assertThat(filmStorage.getFilmsTop(2,1,-1))
+                .isNotEmpty()
+                .isEqualTo(List.of(filmStorage.findById(1)));
+    }
+
+    @Test
+    void test_getFilmsTopByLikesWithYear() {
+        assertThat(filmStorage.getFilmsTop(2,-1,2020))
+                .isNotEmpty()
+                .isEqualTo(List.of(filmStorage.findById(3)));
+    }
+
+    @Test
+    void test_getFilmsTopByLikesWithGenreAndYear() {
+        assertThat(filmStorage.getFilmsTop(2,2,2021))
+                .isNotEmpty()
+                .isEqualTo(List.of(filmStorage.findById(2)));
     }
 
     @Test

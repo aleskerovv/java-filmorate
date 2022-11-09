@@ -59,8 +59,10 @@ public class FilmController {
 
     @GetMapping("/popular")
     @Operation(summary = "returns top-N films by rate")
-    public List<Film> getFilmsTop(@RequestParam(value = "count", defaultValue = "10", required = false) Integer count) {
-        return filmService.getFilmsTop(count);
+    public List<Film> getFilmsTop(@RequestParam(value = "count", defaultValue = "10", required = false) Integer count,
+                                  @RequestParam(value = "genreId", defaultValue = "-1", required = false) Integer genreId,
+                                  @RequestParam(value = "year", defaultValue = "-1", required = false) Integer year) {
+        return filmService.getFilmsTop(count, genreId, year);
     }
 
     @DeleteMapping("/{filmId}")
