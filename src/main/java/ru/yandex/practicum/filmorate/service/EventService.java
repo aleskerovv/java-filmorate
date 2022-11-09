@@ -7,7 +7,8 @@ import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDateTime;
+import java.sql.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -34,7 +35,7 @@ public class EventService {
                 .entityId(entityId)
                 .eventType(eventType)
                 .operation(operation)
-                .timestamp(LocalDateTime.now())
+                .timestamp(Date.from(Instant.now()))
                 .build();
         eventDbStorage.addNewEvent(newEvent, tableName);
     }

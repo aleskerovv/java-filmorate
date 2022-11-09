@@ -13,4 +13,5 @@ public interface FilmStorage extends EntityStorage<Film> {
     List<Film> getFilmsByDirector(int directorId, String sortBy);
     List<Film> searchFilm(String filter, List<String> by);
     List<Integer> getRecommendations(Integer idUserWithClosestInterests, Integer idRecommendedUser);
+    List<Film> getCommonFilms(Integer userId, Integer friendsId);
 }

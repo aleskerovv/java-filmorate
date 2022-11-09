@@ -96,8 +96,8 @@ public class ReviewDbStorage implements ReviewStorage {
                 review.getReviewId());
 
         log.info("updated review with id {}", review.getReviewId());
-
-        return review;
+        //Необходимо запрашивать обновленный из базы, т.к. в присланном теле запроса может быть неверный фильм/юзер
+        return findById(review.getReviewId());
     }
 
     @Override

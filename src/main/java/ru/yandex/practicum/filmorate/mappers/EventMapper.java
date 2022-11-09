@@ -11,7 +11,7 @@ public class EventMapper {
                 .eventId(rs.getInt("event_id"))
                 .userId(rs.getInt("user_id"))
                 .entityId(rs.getInt("entity_id"))
-                .timestamp(rs.getTimestamp("timestamp").toLocalDateTime())
+                .timestamp(rs.getTimestamp("timestamp"))
                 .eventType(Event.EventType.valueOf(rs.getString("event_type")))
                 .operation(Event.Operation.valueOf(rs.getString("operation")))
                 .build();
