@@ -71,10 +71,10 @@ public class UserService {
     public List<Film> getRecommendations(Integer idRecommendedUser, Integer limitFilms) {
         List<Integer> usersWithSimilarInterests = getIdUsersWithSimilarInterests(idRecommendedUser);
         if (usersWithSimilarInterests.isEmpty()) return new ArrayList<>();
-        log.info("Compiled a list of users with similar interests " + usersWithSimilarInterests);
         List<Integer> idRecommendationsFilms = getIdsFilmsRecomendations(usersWithSimilarInterests,
                 idRecommendedUser, limitFilms);
         List<Film> recommendationsFilms = filmsByIDFromList(idRecommendationsFilms);
+        log.info("Made a list of recommended films for user id " + idRecommendedUser);
         return recommendationsFilms;
     }
 
@@ -86,7 +86,6 @@ public class UserService {
         List<Film> films = new ArrayList<>();
         for (Integer i : ids) {
             films.add(filmStorage.findById(i));
-            log.info("Added to list film id " + i);
         }
         return films;
     }
@@ -95,15 +94,12 @@ public class UserService {
                                                     Integer idRecommendedUser, Integer limit) {
         List<Integer> filmsRecomendations = new ArrayList<>();
         for (Integer i : usersWithSimilarInterests) {
-            log.info("Get recommendations from the user id " + i);
             List<Integer> idFilmsRecommendedByUser = filmStorage.getRecommendations(i,
                     idRecommendedUser);
-            log.info("User id " + i + " recommends movies " + idFilmsRecommendedByUser);
             for (int j = 0; (j < idFilmsRecommendedByUser.size()) && (filmsRecomendations.size() < limit); j++) {
                 Integer idFilm = idFilmsRecommendedByUser.get(j);
                 if (!filmsRecomendations.contains(idFilm)) {
                     filmsRecomendations.add(idFilm);
-                    log.info("Film id " + idFilm + " added to recommendation list");
                 }
             }
         }

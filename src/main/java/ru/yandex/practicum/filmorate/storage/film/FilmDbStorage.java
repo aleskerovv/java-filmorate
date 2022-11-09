@@ -409,7 +409,6 @@ public class FilmDbStorage implements FilmStorage {
                 "SELECT fl_2.film_id " +
                 "FROM films_likes AS fl_2 " +
                 "WHERE fl_2.user_id = ?";
-        log.info("Made a list of recommended movies based on user id " + idUserWithClosestInterests);
         return jdbcTemplate.queryForList(sql, Integer.class, idUserWithClosestInterests, idRecommendedUser);
     }
 
