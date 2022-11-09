@@ -38,7 +38,7 @@ public class EventDbStorage {
             stmt.setString(3, event.getOperation().name());
             stmt.setInt(4, event.getEntityId());
             stmt.setString(5, tableName);
-            stmt.setTimestamp(6, Timestamp.valueOf(event.getTimestamp()));
+            stmt.setTimestamp(6, new Timestamp(event.getTimestamp().getTime()));
             return stmt;
         }, keyHolder);
 

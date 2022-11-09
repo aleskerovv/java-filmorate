@@ -9,10 +9,11 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.ReviewService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class EventDbStorageTest {
     private final EventService eventService;
     private final UserService userService;
     private final FilmService filmService;
+    private final ReviewService reviewService;
 
     @Test
     void shouldReturnEmptyFeedWhenNoEvents() {
@@ -38,7 +40,7 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldReturnFeedWithTwoEventsWhenFriendAddedThenRemoved(){
+    void shouldReturnFeedWithTwoEventsWhenFriendAddedThenRemoved() {
         userService.addFriend(1, 2);
         userService.deleteFriend(1, 2);
         List<Event> events = eventService.getFeedByUserId(1);
@@ -52,9 +54,9 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldReturnFeedWithTwoEventsWhenFilmLikedThenRemoved(){
-        filmService.addLike(1,3);
-        filmService.deleteLike(1,3);
+    void shouldReturnFeedWithTwoEventsWhenFilmLikedThenRemoved() {
+        filmService.addLike(1, 3);
+        filmService.deleteLike(1, 3);
         List<Event> events = eventService.getFeedByUserId(3);
         assertEquals(2, events.size(), "Feed size incorrect");
         assertEquals(1, events.get(0).getEntityId());
@@ -66,10 +68,10 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldReturnEmptyFeedWhenAddFriendFails(){
+    void shouldReturnEmptyFeedWhenAddFriendFails() {
         try {
             userService.addFriend(1, -1);
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
         List<Event> events = eventService.getFeedByUserId(1);
@@ -77,10 +79,10 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldReturnEmptyFeedWhenRemoveFriendFails(){
+    void shouldReturnEmptyFeedWhenRemoveFriendFails() {
         try {
             userService.deleteFriend(1, -1);
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
         List<Event> events = eventService.getFeedByUserId(1);
@@ -88,10 +90,10 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldReturnEmptyFeedWhenRemoveLikeFails(){
+    void shouldReturnEmptyFeedWhenRemoveLikeFails() {
         try {
             filmService.deleteLike(-1, 1);
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
         List<Event> events = eventService.getFeedByUserId(1);
@@ -99,10 +101,10 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldReturnEmptyFeedWhenAddLikeFails(){
+    void shouldReturnEmptyFeedWhenAddLikeFails() {
         try {
             filmService.addLike(-1, 1);
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
         List<Event> events = eventService.getFeedByUserId(1);
@@ -110,9 +112,50 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldThrowNotFoundExceptionWhenUserIdIncorrect(){
+    void shouldThrowNotFoundExceptionWhenUserIdIncorrect() {
         final NotFoundException e = assertThrows(NotFoundException.class,
                 () -> eventService.getFeedByUserId(-1));
         assertEquals("user with id -1 not found", e.getMessage());
+    }
+
+    @Test
+    void shouldReturnFeedWithOneCreatedReview() {
+        reviewService.createReview(
+                new Review().setUserId(1)
+                        .setFilmId(1)
+                        .setUseful(1)
+                        .setContent("User 1 review for film 1")
+                        .setIsPositive(true));
+        List<Event> events = eventService.getFeedByUserId(1);
+        assertEquals(1, events.size(), "Feed size incorrect");
+        Event event = events.get(0);
+        assertEquals(Event.EventType.REVIEW, event.getEventType(), "Wrong event type");
+        assertEquals(Event.Operation.ADD, event.getOperation(), "Wrong operation type");
+    }
+
+    @Test
+    void shouldReturnFeedWithOneDeletedReview() {
+        reviewService.deleteReviewById(1);
+        List<Event> events = eventService.getFeedByUserId(1);
+        assertEquals(1, events.size(), "Feed size incorrect");
+        Event event = events.get(0);
+        assertEquals(Event.EventType.REVIEW, event.getEventType(), "Wrong event type");
+        assertEquals(Event.Operation.REMOVE, event.getOperation(), "Wrong operation type");
+    }
+
+    @Test
+    void shouldReturnFeedWithOneUpdatedReview() {
+        reviewService.updateReview(
+                new Review().setUserId(1)
+                        .setFilmId(1)
+                        .setUseful(1)
+                        .setContent("User 1 review for film 1")
+                        .setIsPositive(true)
+                        .setReviewId(1));
+        List<Event> events = eventService.getFeedByUserId(1);
+        assertEquals(1, events.size(), "Feed size incorrect");
+        Event event = events.get(0);
+        assertEquals(Event.EventType.REVIEW, event.getEventType(), "Wrong event type");
+        assertEquals(Event.Operation.UPDATE, event.getOperation(), "Wrong operation type");
     }
 }
