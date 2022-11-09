@@ -193,4 +193,21 @@ class FilmDbStorageTest {
         assertThat(filmStorage.searchFilm(filter, List.of("director", "title")).size())
                 .isEqualTo(1);
     }
+
+    @Test
+    @DisplayName("Check that common film was found")
+    void test_getCommonFilms() {
+        filmStorage.addLike(1, 2);
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(2, 2);
+        filmStorage.addLike(2, 1);
+        filmStorage.addLike(1, 3);
+        filmStorage.addLike(3, 1);
+
+        List<Film> found = filmStorage.getCommonFilms(1, 2);
+
+        assertEquals(2, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("rate", 3);
+    }
 }

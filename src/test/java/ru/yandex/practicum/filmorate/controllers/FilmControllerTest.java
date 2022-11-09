@@ -270,4 +270,24 @@ class FilmControllerTest {
                 .andExpect(result -> assertEquals("incorrect filter type",
                         result.getResponse().getContentAsString()));
     }
+
+    @Test
+    @DisplayName("Check that common film was found")
+    void getCommonFilms() throws Exception {
+        mockMvc.perform(put("/films/3/like/1"))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/films/3/like/2"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/films/common?userId=1&friendId=2"))
+                .andExpect(jsonPath("$.*", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(3));
+    }
+
+    @Test
+    @DisplayName("Check that common film was not found")
+    void getEmptyCommonFilms() throws Exception {
+        mockMvc.perform(get("/films/common?userId=1&friendId=2"))
+                .andExpect(jsonPath("$.*", hasSize(0)));
+    }
 }

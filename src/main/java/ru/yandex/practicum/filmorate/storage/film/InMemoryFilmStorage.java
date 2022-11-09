@@ -103,5 +103,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public List<Integer> getRecommendations(Integer idUserWithClosestInterests, Integer idRecommendedUser) {
         throw new UnsupportedOperationException("Метод рекомендации не реализован");
+    
+    @Override
+    public List<Film> getCommonFilms(Integer userId, Integer friendsId) {
+        throw new UnsupportedOperationException("this type of operation not allowed");
     }
 }
