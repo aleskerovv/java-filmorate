@@ -5,9 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,12 +18,16 @@ import java.util.List;
 public class UserService {
     private final UserStorage userStorage;
     private final EventService eventService;
+
+    private final FilmStorage filmStorage;
+
     private static final String TABLE_NAME = "users";
 
     @Autowired
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, EventService eventService) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, EventService eventService, FilmStorage filmStorage) {
         this.userStorage = userStorage;
         this.eventService = eventService;
+        this.filmStorage = filmStorage;
     }
 
     public void addFriend(Integer id, Integer friendId) {
@@ -60,4 +67,43 @@ public class UserService {
     public void deleteUserById(Integer id) {
         userStorage.deleteById(id);
     }
+
+    public List<Film> getRecommendations(Integer idRecommendedUser, Integer limitFilms) {
+        List<Integer> usersWithSimilarInterests = getIdUsersWithSimilarInterests(idRecommendedUser);
+        if (usersWithSimilarInterests.isEmpty()) return new ArrayList<>();
+        List<Integer> idRecommendationsFilms = getIdsFilmsRecomendations(usersWithSimilarInterests,
+                idRecommendedUser, limitFilms);
+        List<Film> recommendationsFilms = filmsByIDFromList(idRecommendationsFilms);
+        log.info("Made a list of recommended films for user id " + idRecommendedUser);
+        return recommendationsFilms;
+    }
+
+    private List<Integer> getIdUsersWithSimilarInterests(int id) {
+        return userStorage.getIdUsersWithSimilarInterests(id);
+    }
+
+    private List<Film> filmsByIDFromList(List<Integer> ids) {
+        List<Film> films = new ArrayList<>();
+        for (Integer i : ids) {
+            films.add(filmStorage.findById(i));
+        }
+        return films;
+    }
+
+    private List<Integer> getIdsFilmsRecomendations(List<Integer> usersWithSimilarInterests,
+                                                    Integer idRecommendedUser, Integer limit) {
+        List<Integer> filmsRecomendations = new ArrayList<>();
+        for (Integer i : usersWithSimilarInterests) {
+            List<Integer> idFilmsRecommendedByUser = filmStorage.getRecommendations(i,
+                    idRecommendedUser);
+            for (int j = 0; (j < idFilmsRecommendedByUser.size()) && (filmsRecomendations.size() < limit); j++) {
+                Integer idFilm = idFilmsRecommendedByUser.get(j);
+                if (!filmsRecomendations.contains(idFilm)) {
+                    filmsRecomendations.add(idFilm);
+                }
+            }
+        }
+        return filmsRecomendations;
+    }
 }
+

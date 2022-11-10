@@ -54,9 +54,9 @@ public class EventDbStorageTest {
     }
 
     @Test
-    void shouldReturnFeedWithTwoEventsWhenFilmLikedThenRemoved() {
-        filmService.addLike(1, 3);
-        filmService.deleteLike(1, 3);
+    void shouldReturnFeedWithTwoEventsWhenFilmLikedThenRemoved(){
+        filmService.addLike(1,3);
+        filmService.deleteLike(1,3);
         List<Event> events = eventService.getFeedByUserId(3);
         assertEquals(2, events.size(), "Feed size incorrect");
         assertEquals(1, events.get(0).getEntityId());

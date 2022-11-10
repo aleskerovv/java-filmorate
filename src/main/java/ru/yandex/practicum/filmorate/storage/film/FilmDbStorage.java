@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -9,7 +10,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.*;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -21,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 
+@Primary
 @Component("filmDbStorage")
 @Slf4j
 @RequiredArgsConstructor
@@ -288,7 +290,7 @@ public class FilmDbStorage implements FilmStorage {
                     throw new IllegalArgumentException("incorrect filter type");
             }
 
-            films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%"+filter+"%");
+            films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%" + filter + "%");
 
         } else {
             sqlQuery = "SELECT f.*, mr.name as mpa_name " +
@@ -305,7 +307,7 @@ public class FilmDbStorage implements FilmStorage {
                     "GROUP BY f.id " +
                     "ORDER BY rate DESC";
 
-            films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%"+filter+"%", "%"+filter+"%");
+            films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%" + filter + "%", "%" + filter + "%");
         }
 
         this.setAttributes(films);
@@ -354,11 +356,11 @@ public class FilmDbStorage implements FilmStorage {
                     "ORDER BY FD.FILM_ID, FD.DIRECTOR_ID";
 
             jdbcTemplate.query(directorsSql, rs -> {
-               Director director = new Director();
-               director.setId(rs.getInt("id"));
-               director.setName(rs.getString("name"));
-               Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
-                       .ifPresent(f -> f.getDirectors().add(director));
+                Director director = new Director();
+                director.setId(rs.getInt("id"));
+                director.setName(rs.getString("name"));
+                Optional.ofNullable(filmMap.get(rs.getInt("film_id")))
+                        .ifPresent(f -> f.getDirectors().add(director));
             });
 
             String likes = "SELECT * " +
@@ -437,4 +439,18 @@ public class FilmDbStorage implements FilmStorage {
         this.setAttributes(films);
         return films;
     }
+
+    @Override
+    public List<Integer> getRecommendations(Integer idUserWithClosestInterests, Integer idRecommendedUser) {
+        String sql = "SELECT fl_1.film_id " +
+                "FROM films_likes AS fl_1 " +
+                "WHERE fl_1.user_id = ? " +
+                "EXCEPT " +
+                "SELECT fl_2.film_id " +
+                "FROM films_likes AS fl_2 " +
+                "WHERE fl_2.user_id = ?";
+        return jdbcTemplate.queryForList(sql, Integer.class, idUserWithClosestInterests, idRecommendedUser);
+    }
+
+
 }

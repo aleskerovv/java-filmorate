@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -83,5 +84,11 @@ public class UserController {
     @Operation(summary = "returns users events-feed")
     public List<Event> getFeedByUserId(@PathVariable int id){
         return eventService.getFeedByUserId(id);
+    }
+
+    @GetMapping("{id}/recommendations")
+    public List<Film> getRecommendations(@PathVariable int id,
+                                         @RequestParam(required = false, defaultValue = "10") Integer limitFilms) {
+        return userService.getRecommendations(id, limitFilms);
     }
 }
