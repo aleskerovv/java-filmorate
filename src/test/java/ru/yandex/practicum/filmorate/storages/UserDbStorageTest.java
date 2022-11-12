@@ -9,6 +9,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         "file:src/test/resources/test-data-users-films.sql"})
 class UserDbStorageTest {
     private final UserDbStorage userStorage;
+    private final FilmDbStorage filmStorage;
 
     @Test
     void test_FindById() {
@@ -129,6 +131,16 @@ class UserDbStorageTest {
         assertThat(nfe.getMessage())
                 .isEqualTo(message);
     }
+    @Test
+    void test_getIdUsersWithSimilarInterests() {
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(2, 1);
+        filmStorage.addLike(1, 2);
+        filmStorage.addLike(2, 2);
+        filmStorage.addLike(1, 3);
 
-
+        List<Integer> usersWithSimilarInterests = userStorage.getIdUsersWithSimilarInterests(1);
+        assertEquals(2, usersWithSimilarInterests.size());
+        assertEquals(2, usersWithSimilarInterests.get(0));
+    }
 }

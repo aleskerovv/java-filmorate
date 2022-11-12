@@ -230,34 +230,34 @@ public class FilmDbStorage implements FilmStorage {
                     "ORDER BY f.rate DESC, f.ID " +
                     "LIMIT ? ";
         } else if ((genreId == -1) && (year != -1)) {
-                query = "SELECT f.*, mr.name as mpa_name \n " +
-                        "FROM FILMS f \n " +
-                        "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
-                        "WHERE EXTRACT(YEAR FROM f.RELEASE_DATE) = " + year +
-                        " ORDER BY f.rate DESC, f.ID " +
-                        "LIMIT ? ";
-            } else if ((genreId != -1) && (year == -1)) {
-                query = "SELECT f.*, mr.name as mpa_name \n " +
-                        "FROM FILMS f \n " +
-                        "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
-                        "left join FILMS_GENRES FG on f.ID = FG.FILM_ID " +
-                        "WHERE FG.GENRE_ID = " + genreId +
-                        " ORDER BY f.rate DESC, f.ID " +
-                        "LIMIT ? ";
-            } else {
-                query = "SELECT f.*, mr.name as mpa_name \n " +
-                        "FROM FILMS f \n " +
-                        "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
-                        "left join FILMS_GENRES FG on f.ID = FG.FILM_ID " +
-                        "WHERE FG.GENRE_ID = " + genreId +
-                        " AND EXTRACT(YEAR FROM f.RELEASE_DATE) = " + year +
-                        " ORDER BY f.rate DESC, f.ID " +
-                        "LIMIT ? ";
-            }
-            List<Film> filmsSorted = jdbcTemplate.query(query, FilmMapper::mapToFilm, count);
-            this.setAttributes(filmsSorted);
-            return filmsSorted;
+            query = "SELECT f.*, mr.name as mpa_name \n " +
+                    "FROM FILMS f \n " +
+                    "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
+                    "WHERE EXTRACT(YEAR FROM f.RELEASE_DATE) = " + year +
+                    " ORDER BY f.rate DESC, f.ID " +
+                    "LIMIT ? ";
+        } else if ((genreId != -1) && (year == -1)) {
+            query = "SELECT f.*, mr.name as mpa_name \n " +
+                    "FROM FILMS f \n " +
+                    "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
+                    "left join FILMS_GENRES FG on f.ID = FG.FILM_ID " +
+                    "WHERE FG.GENRE_ID = " + genreId +
+                    " ORDER BY f.rate DESC, f.ID " +
+                    "LIMIT ? ";
+        } else {
+            query = "SELECT f.*, mr.name as mpa_name \n " +
+                    "FROM FILMS f \n " +
+                    "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " +
+                    "left join FILMS_GENRES FG on f.ID = FG.FILM_ID " +
+                    "WHERE FG.GENRE_ID = " + genreId +
+                    " AND EXTRACT(YEAR FROM f.RELEASE_DATE) = " + year +
+                    " ORDER BY f.rate DESC, f.ID " +
+                    "LIMIT ? ";
         }
+        List<Film> filmsSorted = jdbcTemplate.query(query, FilmMapper::mapToFilm, count);
+        this.setAttributes(filmsSorted);
+        return filmsSorted;
+    }
 
     @Override
     public List<Film> searchFilm(String filter, List<String> by) {
@@ -441,15 +441,19 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Integer> getRecommendations(Integer idUserWithClosestInterests, Integer idRecommendedUser) {
-        String sql = "SELECT fl_1.film_id " +
+    public List<Integer> getRecommendations(Integer[] usersWithSimilarInterests, Integer idRecommendedUser,
+                                            Integer limit) {
+
+        String sql = "SELECT DISTINCT fl_1.film_id " +
                 "FROM films_likes AS fl_1 " +
-                "WHERE fl_1.user_id = ? " +
+                "WHERE fl_1.user_id IN (?) " +
                 "EXCEPT " +
                 "SELECT fl_2.film_id " +
                 "FROM films_likes AS fl_2 " +
-                "WHERE fl_2.user_id = ?";
-        return jdbcTemplate.queryForList(sql, Integer.class, idUserWithClosestInterests, idRecommendedUser);
+                "WHERE fl_2.user_id = ? " +
+                "LIMIT ?";
+        return jdbcTemplate.queryForList(sql, Integer.class, usersWithSimilarInterests, idRecommendedUser, limit);
+
     }
 
 
