@@ -230,6 +230,7 @@ public class FilmDbStorage implements FilmStorage {
                 "WHERE 1=1 " + whereGenre + whereYear +
                 " ORDER BY f.rate DESC, f.ID " +
                 "LIMIT ? ";
+
         List<Film> filmsSorted = jdbcTemplate.query(query, FilmMapper::mapToFilm, count);
         this.setAttributes(filmsSorted);
         return filmsSorted;
@@ -417,15 +418,19 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Integer> getRecommendations(Integer idUserWithClosestInterests, Integer idRecommendedUser) {
-        String sql = "SELECT fl_1.film_id " +
+    public List<Integer> getRecommendations(Integer[] usersWithSimilarInterests, Integer idRecommendedUser,
+                                            Integer limit) {
+
+        String sql = "SELECT DISTINCT fl_1.film_id " +
                 "FROM films_likes AS fl_1 " +
-                "WHERE fl_1.user_id = ? " +
+                "WHERE fl_1.user_id IN (?) " +
                 "EXCEPT " +
                 "SELECT fl_2.film_id " +
                 "FROM films_likes AS fl_2 " +
-                "WHERE fl_2.user_id = ?";
-        return jdbcTemplate.queryForList(sql, Integer.class, idUserWithClosestInterests, idRecommendedUser);
+                "WHERE fl_2.user_id = ? " +
+                "LIMIT ?";
+        return jdbcTemplate.queryForList(sql, Integer.class, usersWithSimilarInterests, idRecommendedUser, limit);
+
     }
 
 

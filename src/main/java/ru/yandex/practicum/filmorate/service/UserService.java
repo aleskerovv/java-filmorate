@@ -92,17 +92,9 @@ public class UserService {
 
     private List<Integer> getIdsFilmsRecomendations(List<Integer> usersWithSimilarInterests,
                                                     Integer idRecommendedUser, Integer limit) {
-        List<Integer> filmsRecomendations = new ArrayList<>();
-        for (Integer i : usersWithSimilarInterests) {
-            List<Integer> idFilmsRecommendedByUser = filmStorage.getRecommendations(i,
-                    idRecommendedUser);
-            for (int j = 0; (j < idFilmsRecommendedByUser.size()) && (filmsRecomendations.size() < limit); j++) {
-                Integer idFilm = idFilmsRecommendedByUser.get(j);
-                if (!filmsRecomendations.contains(idFilm)) {
-                    filmsRecomendations.add(idFilm);
-                }
-            }
-        }
+        Integer[] users = usersWithSimilarInterests.toArray(new Integer[0]);
+        List<Integer> filmsRecomendations = filmStorage.getRecommendations(users,
+                idRecommendedUser, limit);
         return filmsRecomendations;
     }
 }
