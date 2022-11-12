@@ -11,23 +11,25 @@ import ru.yandex.practicum.filmorate.model.Event;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class EventDbStorage {
+public class EventDbStorage implements EventStorage{
 
     private final JdbcTemplate jdbcTemplate;
 
+    @Override
     public List<Event> getFeedByUserId(int id) {
-        String query = "SELECT event_id, user_id, timestamp, event_type," +
-                " operation, entity_id FROM events WHERE user_id = ?";
+        String query = "SELECT event_id, user_id, event_timestamp, event_type," +
+                " operation, entity_id FROM events WHERE user_id = ?" +
+                "ORDER BY event_id";
         return jdbcTemplate.query(query, EventMapper::mapToFeed, id);
     }
 
+    @Override
     public Event addNewEvent(Event event, String tableName) {
-        String createQuery = "insert into events(user_id, event_type, operation, entity_id, entity_table_name, timestamp) " +
-                "values (?, ?, ?, ?, ?, ?)";
+        String createQuery = "INSERT INTO events(user_id, event_type, operation, entity_id, entity_table_name," +
+                " event_timestamp) VALUES (?, ?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -41,10 +43,7 @@ public class EventDbStorage {
             stmt.setTimestamp(6, new Timestamp(event.getTimestamp().getTime()));
             return stmt;
         }, keyHolder);
-
-        Optional<Integer> id = Optional.of(keyHolder.getKey().intValue());
-        event.setEventId(id.get());
-
+        event.setEventId(keyHolder.getKey().intValue());
         return event;
     }
 }

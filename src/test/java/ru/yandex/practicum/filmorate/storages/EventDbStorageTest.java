@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
@@ -15,6 +16,8 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +35,7 @@ public class EventDbStorageTest {
     private final UserService userService;
     private final FilmService filmService;
     private final ReviewService reviewService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Test
     void shouldReturnEmptyFeedWhenNoEvents() {
@@ -157,5 +161,19 @@ public class EventDbStorageTest {
         Event event = events.get(0);
         assertEquals(Event.EventType.REVIEW, event.getEventType(), "Wrong event type");
         assertEquals(Event.Operation.UPDATE, event.getOperation(), "Wrong operation type");
+    }
+
+    @Test
+    void shouldReturnFeedOrderedById(){
+        String createQuery = "INSERT INTO events(event_id, user_id, event_type, operation, entity_id," +
+                " entity_table_name, event_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        jdbcTemplate.update(createQuery, 3, 1, "LIKE", "ADD", 1, "users", Timestamp.from(Instant.now()));
+        jdbcTemplate.update(createQuery, 2, 1, "LIKE", "ADD", 1, "users", Timestamp.from(Instant.now()));
+        jdbcTemplate.update(createQuery, 1, 1, "LIKE", "ADD", 1, "users", Timestamp.from(Instant.now()));
+        List<Event> events = eventService.getFeedByUserId(1);
+        assertEquals(3, events.size(), "Feed size incorrect");
+        assertEquals(1, events.get(0).getEventId(), "Feed order incorrect");
+        assertEquals(2, events.get(1).getEventId(), "Feed order incorrect");
+        assertEquals(3, events.get(2).getEventId(), "Feed order incorrect");
     }
 }

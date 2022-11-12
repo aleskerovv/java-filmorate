@@ -2,13 +2,15 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
-@Data
 @Builder
+@Getter
 public class Event {
+    @Setter
     private int eventId;
     private final int userId;
     private final int entityId;

@@ -77,8 +77,7 @@ public class FilmDbStorage implements FilmStorage {
             return stmt;
         }, keyHolder);
 
-        Optional<Integer> id = Optional.of(keyHolder.getKey().intValue());
-        film.setId(id.get());
+        film.setId(keyHolder.getKey().intValue());
 
         setGenres(film);
 

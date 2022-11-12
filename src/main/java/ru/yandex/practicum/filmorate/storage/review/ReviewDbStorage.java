@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.model.Review;
 
 import java.sql.PreparedStatement;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @Slf4j
@@ -75,10 +74,10 @@ public class ReviewDbStorage implements ReviewStorage {
             return stmt;
         }, kh);
 
-        Optional<Integer> id = Optional.of(kh.getKey().intValue());
-        review.setReviewId(id.get());
+        int id = kh.getKey().intValue();
+        review.setReviewId(id);
 
-        log.info("created review with id {}", id.get());
+        log.info("created review with id {}", id);
 
         return review;
     }
