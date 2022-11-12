@@ -224,7 +224,7 @@ public class FilmDbStorage implements FilmStorage {
         String whereYear = year != -1 ? " AND EXTRACT(YEAR FROM f.RELEASE_DATE) = " + year : "";
         String joinGenres = genreId != -1 ? " left join FILMS_GENRES FG on f.ID = FG.FILM_ID " : "";
         String whereGenre = genreId != -1 ? " AND FG.GENRE_ID = " + genreId : "";
-        String query = "SELECT f.*, mr.name as mpa_name \n " +
+        query = "SELECT f.*, mr.name as mpa_name \n " +
                 "FROM FILMS f \n " +
                 "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID \n " + joinGenres +
                 "WHERE 1=1 " + whereGenre + whereYear +
