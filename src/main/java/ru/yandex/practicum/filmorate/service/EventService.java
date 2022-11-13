@@ -35,7 +35,7 @@ public class EventService {
                 .entityId(entityId)
                 .eventType(eventType)
                 .operation(operation)
-                .timestamp(Date.from(Instant.now()))
+                .eventTime(Date.from(Instant.now()))
                 .build();
         eventStorage.addNewEvent(newEvent, tableName);
     }

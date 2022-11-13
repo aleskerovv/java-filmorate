@@ -20,7 +20,7 @@ public class EventDbStorage implements EventStorage{
 
     @Override
     public List<Event> getFeedByUserId(int id) {
-        String query = "SELECT event_id, user_id, event_timestamp, event_type," +
+        String query = "SELECT event_id, user_id, event_time, event_type," +
                 " operation, entity_id FROM events WHERE user_id = ?" +
                 "ORDER BY event_id";
         return jdbcTemplate.query(query, EventMapper::mapToFeed, id);
@@ -29,7 +29,7 @@ public class EventDbStorage implements EventStorage{
     @Override
     public Event addNewEvent(Event event, String tableName) {
         String createQuery = "INSERT INTO events(user_id, event_type, operation, entity_id, entity_table_name," +
-                " event_timestamp) VALUES (?, ?, ?, ?, ?, ?)";
+                " event_time) VALUES (?, ?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -40,7 +40,7 @@ public class EventDbStorage implements EventStorage{
             stmt.setString(3, event.getOperation().name());
             stmt.setInt(4, event.getEntityId());
             stmt.setString(5, tableName);
-            stmt.setTimestamp(6, new Timestamp(event.getTimestamp().getTime()));
+            stmt.setTimestamp(6, new Timestamp(event.getEventTime().getTime()));
             return stmt;
         }, keyHolder);
         event.setEventId(keyHolder.getKey().intValue());

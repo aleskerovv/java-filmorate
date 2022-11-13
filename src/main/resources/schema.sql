@@ -87,7 +87,7 @@ create table if not exists EVENTS
     EVENT_ID          INTEGER auto_increment
         primary key,
     USER_ID           INTEGER                           not null,
-    EVENT_TIMESTAMP   TIMESTAMP                         not null,
+    EVENT_TIME        TIMESTAMP                         not null,
     EVENT_TYPE        ENUM ('LIKE', 'REVIEW', 'FRIEND') not null,
     OPERATION         ENUM ('REMOVE', 'ADD', 'UPDATE')  not null,
     ENTITY_ID         INTEGER                           not null,
