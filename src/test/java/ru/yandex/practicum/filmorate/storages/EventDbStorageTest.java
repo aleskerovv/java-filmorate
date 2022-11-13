@@ -166,7 +166,7 @@ public class EventDbStorageTest {
     @Test
     void shouldReturnFeedOrderedById(){
         String createQuery = "INSERT INTO events(event_id, user_id, event_type, operation, entity_id," +
-                " entity_table_name, event_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                " entity_table_name, event_time) VALUES (?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(createQuery, 3, 1, "LIKE", "ADD", 1, "users", Timestamp.from(Instant.now()));
         jdbcTemplate.update(createQuery, 2, 1, "LIKE", "ADD", 1, "users", Timestamp.from(Instant.now()));
         jdbcTemplate.update(createQuery, 1, 1, "LIKE", "ADD", 1, "users", Timestamp.from(Instant.now()));
