@@ -23,6 +23,8 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static ru.yandex.practicum.filmorate.model.enums.SearchParam.DIRECTOR;
+import static ru.yandex.practicum.filmorate.model.enums.SearchParam.TITLE;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -159,7 +161,7 @@ class FilmDbStorageTest {
     @ValueSource(strings = {"film", "Film", "IL"})
     @DisplayName("Check that film was found case-insensitive")
     void test_searchFilmByTitle(String filter) {
-        assertThat(filmStorage.searchFilm(filter, List.of("title")).size())
+        assertThat(filmStorage.searchFilm(filter, List.of(TITLE)).size())
                 .isEqualTo(3);
     }
 
@@ -167,7 +169,7 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was found in correct order")
     void test_searchFilmByTitleWithOrder() {
         filmStorage.addLike(2, 2);
-        List<Film> found = filmStorage.searchFilm("film", List.of("title"));
+        List<Film> found = filmStorage.searchFilm("film", List.of(TITLE));
 
         assertEquals(3, found.size());
         assertThat(found.get(0))
@@ -178,7 +180,7 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was not found")
     void test_searchFilmByTitleWithNotExistName() {
 
-        assertThat(filmStorage.searchFilm("qwerty123", List.of("title")))
+        assertThat(filmStorage.searchFilm("qwerty123", List.of(TITLE)))
                 .isEmpty();
     }
 
@@ -186,7 +188,7 @@ class FilmDbStorageTest {
     @ValueSource(strings = {"EN", "En", "en"})
     @DisplayName("Check that film was found case-insensitive")
     void test_searchFilmByDirector(String filter) {
-        assertThat(filmStorage.searchFilm(filter, List.of("director")).size())
+        assertThat(filmStorage.searchFilm(filter, List.of(DIRECTOR)).size())
                 .isEqualTo(2);
     }
 
@@ -194,7 +196,7 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was found in correct order")
     void test_searchFilmByDirectorWithOrder() {
         filmStorage.addLike(1, 2);
-        List<Film> found = filmStorage.searchFilm("en", List.of("director"));
+        List<Film> found = filmStorage.searchFilm("en", List.of(DIRECTOR));
 
         assertEquals(2, found.size());
         assertThat(found.get(0))
@@ -205,7 +207,7 @@ class FilmDbStorageTest {
     @DisplayName("Check that film was not found")
     void test_searchFilmByDirectorWithNotExistName() {
 
-        assertThat(filmStorage.searchFilm("qwerty123", List.of("director")))
+        assertThat(filmStorage.searchFilm("qwerty123", List.of(DIRECTOR)))
                 .isEmpty();
     }
 
@@ -213,7 +215,7 @@ class FilmDbStorageTest {
     @ValueSource(strings = {"ST", "St", "st"})
     @DisplayName("Check that film was found case-insensitive")
     void test_searchFilmByTitleAndDirector(String filter) {
-        assertThat(filmStorage.searchFilm(filter, List.of("director", "title")).size())
+        assertThat(filmStorage.searchFilm(filter, List.of(DIRECTOR, TITLE)).size())
                 .isEqualTo(1);
     }
 
@@ -262,4 +264,27 @@ class FilmDbStorageTest {
         assertEquals(3, recommendations.get(0));
     }
 
+    @Test
+    @DisplayName("Check getFilmsByDirectorSortByYear")
+    void test_getFilmsByDirectorSortByYear() {
+        List<Film> found = filmStorage.getFilmsByDirector(2, "year");
+        assertEquals(2, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("releaseDate", LocalDate.of(2020, 1, 2));
+    }
+
+    @Test
+    @DisplayName("Check getFilmsByDirectorSortByLikes")
+    void test_getFilmsByDirectorSortByLikes() {
+        filmStorage.addLike(1, 2);
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(1, 3);
+        filmStorage.addLike(3, 1);
+        List<Film> found = filmStorage.getFilmsByDirector(2, "likes");
+        assertEquals(2, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("rate", 3);
+        assertThat(found.get(1))
+                .hasFieldOrPropertyWithValue("rate", 1);
+    }
 }

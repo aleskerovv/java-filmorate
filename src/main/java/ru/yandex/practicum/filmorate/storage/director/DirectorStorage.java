@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.storage.EntityStorage;
 import java.util.List;
 
 public interface DirectorStorage extends EntityStorage<Director> {
+
     List<Director> getAll();
+
     List<Director> getDirectorsByFilmId(int id);
 }

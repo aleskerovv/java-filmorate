@@ -94,7 +94,7 @@ static file index.html in the root directory
 <br />
 
 #### DB Model
-![](filmorate-er-diagram-v2.jpg)
+![](filmorate-er-diagram-v3.jpg)
 
 #### Several SQL requests:
 ##### Shows film's title whose MPA Rating equal to 'PG-13'

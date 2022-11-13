@@ -101,7 +101,7 @@ create table if not exists REVIEWS
     REVIEW_ID           INTEGER auto_increment
         primary key,
     CONTENT         CHARACTER VARYING(100) not null,
-    IS_POSITIVE  CHARACTER(10),
+    IS_POSITIVE BOOLEAN,
     USER_ID INTEGER,
     FILM_ID     INTEGER,
     USEFUL         INTEGER DEFAULT 0,
