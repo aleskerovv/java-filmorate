@@ -248,10 +248,7 @@ class FilmControllerTest {
     @DisplayName("Check that film was not found with blank query")
     void getFoundFilmsWithBlankOrEmptyQueryParam(String param) throws Exception {
         mockMvc.perform(get("/films/search?query=" + param + "&by=query"))
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof IllegalArgumentException))
-                .andExpect(result -> assertEquals("search string could not be blank",
-                        result.getResponse().getContentAsString()));
+                .andExpect(jsonPath("$.*", hasSize(3)));
     }
 
     @Test

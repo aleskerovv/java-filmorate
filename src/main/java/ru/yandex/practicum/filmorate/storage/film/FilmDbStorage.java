@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.enums.SearchParam;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -233,22 +234,21 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> searchFilm(String filter, List<String> by) {
+    public List<Film> searchFilm(String filter, List<SearchParam> params) {
         String sqlQuery;
         List<Film> films;
 
-        if (by.size() == 1) {
-            switch (by.get(0)) {
-                case "title":
+        if (params.size() == 1) {
+            switch (params.get(0)) {
+                case TITLE:
                     sqlQuery = "SELECT f.*, mr.name as mpa_name " +
                             "FROM films f " +
                             "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
                             "WHERE LOWER(f.name) LIKE LOWER(?)" +
-                            "GROUP BY f.id " +
                             "ORDER BY f.rate DESC";
                     break;
 
-                case "director":
+                case DIRECTOR:
                     sqlQuery = "SELECT f.*, mr.name as mpa_name " +
                             "FROM directors d " +
                             "JOIN films_directors fd ON d.id = fd.director_id " +
@@ -266,18 +266,13 @@ public class FilmDbStorage implements FilmStorage {
             films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%" + filter + "%");
 
         } else {
-            sqlQuery = "SELECT f.*, mr.name as mpa_name " +
-                    "FROM films f " +
-                    "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
-                    "WHERE LOWER(f.name) LIKE LOWER(?) " +
-                    "UNION " +
-                    "SELECT f.*, mr.name as mpa_name " +
-                    "FROM directors d " +
-                    "JOIN films_directors fd ON d.id = fd.director_id " +
-                    "JOIN films f ON fd.film_id = f.id " +
-                    "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
-                    "WHERE LOWER(d.name) LIKE LOWER(?) " +
-                    "GROUP BY f.id " +
+            sqlQuery = "SELECT f.*, mr.name as mpa_name "+
+                    "FROM directors d "+
+                    "JOIN films_directors fd ON d.id = fd.director_id "+
+                    "RIGHT JOIN films f ON fd.film_id = f.id "+
+                    "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id "+
+                    "WHERE LOWER(d.name) LIKE LOWER(?) OR LOWER(f.name) LIKE LOWER(?) "+
+                    "GROUP BY f.id "+
                     "ORDER BY rate DESC";
 
             films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%" + filter + "%", "%" + filter + "%");

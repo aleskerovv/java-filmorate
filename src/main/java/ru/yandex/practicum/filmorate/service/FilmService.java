@@ -6,11 +6,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.enums.SearchParam;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static ru.yandex.practicum.filmorate.model.enums.SearchParam.searchParams;
 
 @Service
 @Slf4j
@@ -82,16 +86,15 @@ public class FilmService {
 
     public List<Film> searchFilms(String filter, List<String> by) {
         if (filter.isBlank()) {
-            throw new IllegalArgumentException("search string could not be blank");
+            return filmStorage.getAll();
         }
 
-        if ((by.size() == 1
-                && (by.get(0).equals("title") || by.get(0).equals("director")))
-                || (by.size() == 2
-                && by.stream().anyMatch(b -> b.equals("title"))
-                && by.stream().anyMatch(b -> b.equals("director")))) {
+        if (searchParams().containsAll(by)) {
+            List<SearchParam> params = by.stream()
+                    .map(sp -> SearchParam.valueOf(sp.toUpperCase()))
+                    .collect(Collectors.toList());
 
-            return filmStorage.searchFilm(filter, by);
+            return filmStorage.searchFilm(filter, params);
 
         } else {
             throw new IllegalArgumentException("incorrect filter type");

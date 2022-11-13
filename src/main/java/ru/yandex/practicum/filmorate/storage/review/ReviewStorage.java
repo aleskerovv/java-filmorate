@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.storage.EntityStorage;
 import java.util.List;
 
 public interface ReviewStorage extends EntityStorage<Review> {
+
     List<Review> getReviewsByParameters(Integer filmId, int count);
 
     void addLike(Integer reviewId, Integer userId);
