@@ -233,4 +233,28 @@ class FilmDbStorageTest {
         assertThat(found.get(0))
                 .hasFieldOrPropertyWithValue("rate", 3);
     }
+
+    @Test
+    @DisplayName("Check getFilmsByDirectorSortByYear")
+    void test_getFilmsByDirectorSortByYear() {
+        List<Film> found = filmStorage.getFilmsByDirector(2, "year");
+        assertEquals(2, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("releaseDate", LocalDate.of(2020, 1, 2));
+    }
+
+    @Test
+    @DisplayName("Check getFilmsByDirectorSortByLikes")
+    void test_getFilmsByDirectorSortByLikes() {
+        filmStorage.addLike(1, 2);
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(1, 3);
+        filmStorage.addLike(3, 1);
+        List<Film> found = filmStorage.getFilmsByDirector(2, "likes");
+        assertEquals(2, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("rate", 3);
+        assertThat(found.get(1))
+                .hasFieldOrPropertyWithValue("rate", 1);
+    }
 }
