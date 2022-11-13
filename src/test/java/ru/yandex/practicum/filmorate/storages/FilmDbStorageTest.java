@@ -13,6 +13,7 @@ import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,6 +35,7 @@ import static ru.yandex.practicum.filmorate.model.enums.SearchParam.TITLE;
         "file:src/test/resources/test-data-directors.sql"})
 class FilmDbStorageTest {
     private final FilmDbStorage filmStorage;
+    private final UserDbStorage userStorage;
 
     @Test
     void testFindById() {
@@ -232,6 +234,34 @@ class FilmDbStorageTest {
         assertEquals(2, found.size());
         assertThat(found.get(0))
                 .hasFieldOrPropertyWithValue("rate", 3);
+    }
+
+    @Test
+    void test_getRecommendations() {
+        Film film = new Film();
+        film.setName("test film creating");
+        film.setDescription("desc for test");
+        film.setReleaseDate(LocalDate.now());
+        film.setDuration(180);
+        film.getMpa().setId(4);
+        filmStorage.create(film);
+        film.getMpa().setId(5);
+        filmStorage.create(film);
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(2, 1);
+        filmStorage.addLike(1, 2);
+        filmStorage.addLike(2, 2);
+        filmStorage.addLike(3, 2);
+        filmStorage.addLike(4, 2);
+        filmStorage.addLike(5, 2);
+
+        Integer[] usersWithSimilarInterests = new Integer[]{2};
+        Integer limit = 2;
+
+        List<Integer> recommendations = filmStorage.getRecommendations(usersWithSimilarInterests, 1,
+                limit);
+        assertEquals(2, recommendations.size());
+        assertEquals(3, recommendations.get(0));
     }
 
     @Test
