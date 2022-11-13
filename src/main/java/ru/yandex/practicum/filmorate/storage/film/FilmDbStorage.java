@@ -15,7 +15,6 @@ import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.service.DirectorService;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -28,8 +27,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-
-    private final DirectorService directorService;
 
     @Override
     public List<Film> getAll() {
@@ -77,8 +74,7 @@ public class FilmDbStorage implements FilmStorage {
             return stmt;
         }, keyHolder);
 
-        Optional<Integer> id = Optional.of(keyHolder.getKey().intValue());
-        film.setId(id.get());
+        film.setId(keyHolder.getKey().intValue());
 
         setGenres(film);
 
@@ -365,6 +361,19 @@ public class FilmDbStorage implements FilmStorage {
             film.getGenres().add(genre);
         }, film.getId());
 
+        String directorsSql = "SELECT FD.FILM_ID, D.* " +
+                "FROM FILMS_DIRECTORS FD " +
+                "LEFT JOIN DIRECTORS D ON FD.DIRECTOR_ID = D.ID " +
+                "WHERE FD.FILM_ID = ? " +
+                "ORDER BY FD.FILM_ID, FD.DIRECTOR_ID ";
+
+        jdbcTemplate.query(directorsSql, rs -> {
+            Director director = new Director();
+            director.setId(rs.getInt("id"));
+            director.setName(rs.getString("name"));
+            film.getDirectors().add(director);
+        }, film.getId());
+
         String likes = "SELECT * " +
                 "FROM films_likes " +
                 "WHERE FILM_ID = ?";
@@ -372,8 +381,6 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.query(likes, rs -> {
             film.addLike(rs.getInt("user_id"));
         }, film.getId());
-
-        film.setDirectors(new HashSet<>(directorService.getDirectorsByFilmId(film.getId())));
     }
 
     private void isFilmExists(Integer id) {
@@ -400,14 +407,13 @@ public class FilmDbStorage implements FilmStorage {
                 films = jdbcTemplate.query(sqlQueryYear, FilmMapper::mapToFilm, directorId);
                 break;
             case "likes":
-                String sqlQueryLikes = "SELECT F.*, MR.NAME as MPA_NAME\n" +
-                        "FROM FILMS F\n" +
-                        "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
-                        "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +
-                        "LEFT OUTER JOIN FILMS_LIKES FL on F.ID = FL.FILM_ID\n" +
-                        "WHERE FD.DIRECTOR_ID = ?\n" +
-                        "GROUP BY F.ID, MR.NAME\n" +
-                        "ORDER BY COUNT(FL.USER_ID) DESC, F.ID";
+                String sqlQueryLikes = "SELECT F.*, MR.NAME as MPA_NAME " +
+                        "FROM FILMS F " +
+                        "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID " +
+                        "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID " +
+                        "WHERE FD.DIRECTOR_ID = ? " +
+                        "GROUP BY F.ID, MR.NAME " +
+                        "ORDER BY F.RATE DESC, F.ID";
                 films = jdbcTemplate.query(sqlQueryLikes, FilmMapper::mapToFilm, directorId);
                 break;
             default:
