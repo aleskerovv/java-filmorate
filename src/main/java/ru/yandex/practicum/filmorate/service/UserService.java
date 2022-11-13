@@ -71,7 +71,7 @@ public class UserService {
     public List<Film> getRecommendations(Integer idRecommendedUser, Integer limitFilms) {
         List<Integer> usersWithSimilarInterests = getIdUsersWithSimilarInterests(idRecommendedUser);
         if (usersWithSimilarInterests.isEmpty()) return new ArrayList<>();
-        List<Integer> idRecommendationsFilms = getIdsFilmsRecomendations(usersWithSimilarInterests,
+        List<Integer> idRecommendationsFilms = getIdsFilmsRecommendations(usersWithSimilarInterests,
                 idRecommendedUser, limitFilms);
         List<Film> recommendationsFilms = filmsByIDFromList(idRecommendationsFilms);
         log.info("Made a list of recommended films for user id " + idRecommendedUser);
@@ -90,12 +90,11 @@ public class UserService {
         return films;
     }
 
-    private List<Integer> getIdsFilmsRecomendations(List<Integer> usersWithSimilarInterests,
-                                                    Integer idRecommendedUser, Integer limit) {
-        Integer[] users = usersWithSimilarInterests.toArray(new Integer[0]);
-        List<Integer> filmsRecomendations = filmStorage.getRecommendations(users,
+    private List<Integer> getIdsFilmsRecommendations(List<Integer> usersWithSimilarInterests,
+                                                     Integer idRecommendedUser, Integer limit) {
+        Integer[] users = usersWithSimilarInterests.toArray(new Integer[]{});
+        return filmStorage.getRecommendations(users,
                 idRecommendedUser, limit);
-        return filmsRecomendations;
     }
 }
 
