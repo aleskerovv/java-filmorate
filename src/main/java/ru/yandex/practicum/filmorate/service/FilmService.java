@@ -14,7 +14,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.yandex.practicum.filmorate.model.enums.SearchParam.searchParams;
+import static ru.yandex.practicum.filmorate.model.enums.SearchParam.SEARCH_PARAMS;
 
 @Service
 @Slf4j
@@ -89,9 +89,9 @@ public class FilmService {
             return filmStorage.getAll();
         }
 
-        if (searchParams().containsAll(by)) {
+        if (SEARCH_PARAMS.containsAll(by)) {
             List<SearchParam> params = by.stream()
-                    .map(sp -> SearchParam.valueOf(sp.toUpperCase()))
+                    .map(SearchParam::valueOfLabel)
                     .collect(Collectors.toList());
 
             return filmStorage.searchFilm(filter, params);
