@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
@@ -394,7 +395,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films;
         switch (sortBy) {
             case "year":
-                String sqlQueryYear = "SELECT F.ID, F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.RATE, F.MPA_RATE_ID, MR.NAME as MPA_NAME\n" +
+                String sqlQueryYear = "SELECT F.*, MR.NAME as MPA_NAME\n" +
                         "FROM FILMS F\n" +
                         "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
                         "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +
@@ -437,13 +438,13 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByIdList(List<Integer> idList) {
-        Integer[] ids = idList.toArray(new Integer[]{});
-        String query = "SELECT f.*, mr.name as mpa_name " +
+        String inClause = String.join(",", Collections.nCopies(idList.size(), "?"));
+        String query = String.format("SELECT f.*, mr.name as mpa_name " +
                 "FROM films f " +
                 "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID " +
-                "WHERE f.id in (?) " +
-                "ORDER BY f.id";
-        List<Film> films = jdbcTemplate.query(query, FilmMapper::mapToFilm, ids);
+                "WHERE f.id in (%s)", inClause);
+
+        List<Film> films = jdbcTemplate.query(query, FilmMapper::mapToFilm, idList.toArray());
         this.setAttributes(films);
 
         return films;
