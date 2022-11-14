@@ -83,11 +83,7 @@ public class UserService {
     }
 
     private List<Film> filmsByIDFromList(List<Integer> ids) {
-        List<Film> films = new ArrayList<>();
-        for (Integer i : ids) {
-            films.add(filmStorage.findById(i));
-        }
-        return films;
+        return filmStorage.getFilmsByIdList(ids);
     }
 
     private List<Integer> getIdsFilmsRecommendations(List<Integer> usersWithSimilarInterests,
