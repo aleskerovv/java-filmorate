@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
@@ -267,13 +268,13 @@ public class FilmDbStorage implements FilmStorage {
             films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%" + filter + "%");
 
         } else {
-            sqlQuery = "SELECT f.*, mr.name as mpa_name "+
-                    "FROM directors d "+
-                    "JOIN films_directors fd ON d.id = fd.director_id "+
-                    "RIGHT JOIN films f ON fd.film_id = f.id "+
-                    "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id "+
-                    "WHERE LOWER(d.name) LIKE LOWER(?) OR LOWER(f.name) LIKE LOWER(?) "+
-                    "GROUP BY f.id "+
+            sqlQuery = "SELECT f.*, mr.name as mpa_name " +
+                    "FROM directors d " +
+                    "JOIN films_directors fd ON d.id = fd.director_id " +
+                    "RIGHT JOIN films f ON fd.film_id = f.id " +
+                    "JOIN mpa_rating mr ON f.mpa_rate_id = mr.mpa_rate_id " +
+                    "WHERE LOWER(d.name) LIKE LOWER(?) OR LOWER(f.name) LIKE LOWER(?) " +
+                    "GROUP BY f.id " +
                     "ORDER BY rate DESC";
 
             films = jdbcTemplate.query(sqlQuery, FilmMapper::mapToFilm, "%" + filter + "%", "%" + filter + "%");
@@ -394,7 +395,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films;
         switch (sortBy) {
             case "year":
-                String sqlQueryYear = "SELECT F.ID, F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.RATE, F.MPA_RATE_ID, MR.NAME as MPA_NAME\n" +
+                String sqlQueryYear = "SELECT F.*, MR.NAME as MPA_NAME\n" +
                         "FROM FILMS F\n" +
                         "LEFT JOIN MPA_RATING MR on F.MPA_RATE_ID = MR.MPA_RATE_ID\n" +
                         "LEFT JOIN FILMS_DIRECTORS FD on F.ID = FD.FILM_ID\n" +
@@ -435,5 +436,17 @@ public class FilmDbStorage implements FilmStorage {
 
     }
 
+    @Override
+    public List<Film> getFilmsByIdList(List<Integer> idList) {
+        String inClause = String.join(",", Collections.nCopies(idList.size(), "?"));
+        String query = String.format("SELECT f.*, mr.name as mpa_name " +
+                "FROM films f " +
+                "left join MPA_RATING MR on f.MPA_RATE_ID = MR.MPA_RATE_ID " +
+                "WHERE f.id in (%s)", inClause);
 
+        List<Film> films = jdbcTemplate.query(query, FilmMapper::mapToFilm, idList.toArray());
+        this.setAttributes(films);
+
+        return films;
+    }
 }
