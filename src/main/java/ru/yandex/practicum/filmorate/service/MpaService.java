@@ -4,17 +4,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.MpaCategory;
-import ru.yandex.practicum.filmorate.storage.AbstractStorage;
+import ru.yandex.practicum.filmorate.storage.AbstractDictionary;
 
 import java.util.List;
 
 @Service
 @Slf4j
 public class MpaService {
-    private final AbstractStorage<MpaCategory> mpaStorage;
+    private final AbstractDictionary<MpaCategory> mpaStorage;
 
     @Autowired
-    public MpaService(AbstractStorage<MpaCategory> mpaStorage) {
+    public MpaService(AbstractDictionary<MpaCategory> mpaStorage) {
         this.mpaStorage = mpaStorage;
     }
 

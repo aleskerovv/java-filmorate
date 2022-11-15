@@ -6,7 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
+import ru.yandex.practicum.filmorate.exceptions.*;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -66,9 +67,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        if (user.getId() < 0) {
-            throw new IllegalArgumentException("id cannot be negative");
-        }
         this.isUserExists(user.getId());
 
         String query = "update users set " +
@@ -80,30 +78,64 @@ public class UserDbStorage implements UserStorage {
                 user.getBirthday(),
                 user.getId());
 
+        log.info("updated user with id {}", user.getId());
+
         return findById(user.getId());
     }
 
     @Override
-    public void deleteAll() {
-        String query = "delete from users";
-        jdbcTemplate.update(query);
+    public void deleteById(Integer id) {        //for Andrey
+        this.isUserExists(id);
+        String query = "delete from users where id = ?";
+        jdbcTemplate.update(query, id);
     }
 
     @Override
     public void addFriend(Integer id, Integer friendId) {
         this.isUserExists(id);
         this.isUserExists(friendId);
+
+        String checkQuery =
+                "SELECT user_id " +
+                        "FROM friendships " +
+                        "WHERE friend_id = ? " +
+                        "AND user_id = ?;";
+
+        if (!jdbcTemplate
+                .query(checkQuery, (rs, n) -> rs.getInt("user_id"), friendId, id)
+                .isEmpty()) {
+            throw new DuplicateEventException(String.format("User with id %d already friend with user with id %d",
+                    friendId, id));
+        }
+
         String query = "merge into friendships(user_id, friend_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(query, id, friendId);
+
+        log.info("user with id {} added to friend list user with id {}", id, friendId);
     }
 
     @Override
     public void deleteFriend(Integer id, Integer friendId) {
         this.isUserExists(id);
         this.isUserExists(friendId);
+
+        String checkQuery =
+                "SELECT user_id " +
+                        "FROM friendships " +
+                        "WHERE friend_id = ? " +
+                        "AND user_id = ?;";
+
+        if (jdbcTemplate
+                .query(checkQuery, (rs, n) -> rs.getInt("user_id"), friendId, id)
+                .isEmpty()) {
+            throw new NotFoundException("user", String.format("User with id %d not friend with user with id %d",
+                    friendId, id));
+        }
+
         String query = "delete from friendships where user_id = ? and friend_id = ?";
         jdbcTemplate.update(query, id, friendId);
+        log.info("user with id {} removed from friend list user with id {}", id, friendId);
     }
 
     @Override
@@ -156,5 +188,14 @@ public class UserDbStorage implements UserStorage {
             throw new NotFoundException("id", String
                     .format("user with id %d does not exists", id));
         }
+    }
+    @Override
+    public List<Integer> getIdUsersWithSimilarInterests(Integer userId) {
+        String sql = "SELECT fl2.user_id " +
+                "FROM films_likes AS fl1 JOIN films_likes AS fl2 ON fl1.film_id = fl2.film_id " +
+                "WHERE fl1.user_id = ? AND fl1.user_id<>fl2.user_id " +
+                "GROUP BY fl1.user_id , fl2.user_id " +
+                "ORDER BY COUNT(fl1.film_id) DESC ";
+        return jdbcTemplate.queryForList(sql, Integer.class, userId);
     }
 }

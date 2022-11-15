@@ -1,3 +1,4 @@
+--tables creating
 create table if not exists USERS
 (
     ID       INTEGER auto_increment
@@ -14,9 +15,9 @@ create table if not exists FRIENDSHIPS
     FRIEND_ID INTEGER not null,
     primary key (USER_ID, FRIEND_ID),
     constraint FRIENDS_FRIENDSHIP_ID
-        foreign key (FRIEND_ID) references USERS,
+        foreign key (FRIEND_ID) references USERS ON DELETE CASCADE,
     constraint USERS_FRIENDSHIP_ID
-        foreign key (USER_ID) references USERS
+        foreign key (USER_ID) references USERS ON DELETE CASCADE
 );
 
 create table if not exists MPA_RATING
@@ -42,7 +43,7 @@ create table if not exists FILMS
 
 create table if not exists GENRES
 (
-    GENRE_ID INTEGER  primary key,
+    GENRE_ID INTEGER primary key,
     NAME     CHARACTER VARYING(64) not null
 );
 
@@ -52,9 +53,9 @@ create table if not exists FILMS_LIKES
     USER_ID INTEGER not null,
     primary key (FILM_ID, USER_ID),
     constraint USERS_LIKES_FK
-        foreign key (USER_ID) references USERS,
+        foreign key (USER_ID) references USERS ON DELETE CASCADE,
     constraint FILMS_LIKES_FK
-        foreign key (FILM_ID) references FILMS
+        foreign key (FILM_ID) references FILMS ON DELETE CASCADE
 );
 
 create table if not exists FILMS_GENRES
@@ -63,7 +64,61 @@ create table if not exists FILMS_GENRES
     GENRE_ID INTEGER not null,
     primary key (FILM_ID, GENRE_ID),
     constraint FILM_FILM_FK_1
-        foreign key (FILM_ID) references FILMS,
+        foreign key (FILM_ID) references FILMS ON DELETE CASCADE,
     constraint FILM_GENRE_FK_1
-        foreign key (GENRE_ID) references GENRES
+        foreign key (GENRE_ID) references GENRES ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS DIRECTORS
+(
+  ID INTEGER PRIMARY KEY AUTO_INCREMENT,
+  NAME VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS FILMS_DIRECTORS
+(
+  FILM_ID INTEGER NOT NULL REFERENCES FILMS ON DELETE CASCADE,
+  DIRECTOR_ID INTEGER NOT NULL REFERENCES DIRECTORS ON DELETE CASCADE,
+  PRIMARY KEY (FILM_ID, DIRECTOR_ID)
+ );
+
+create table if not exists EVENTS
+(
+    EVENT_ID          INTEGER auto_increment
+        primary key,
+    USER_ID           INTEGER                           not null,
+    EVENT_TIME        TIMESTAMP                         not null,
+    EVENT_TYPE        ENUM ('LIKE', 'REVIEW', 'FRIEND') not null,
+    OPERATION         ENUM ('REMOVE', 'ADD', 'UPDATE')  not null,
+    ENTITY_ID         INTEGER                           not null,
+    ENTITY_TABLE_NAME CHARACTER VARYING(64)             not null,
+    constraint EVENT_USER_FK
+        foreign key (USER_ID) references USERS ON DELETE CASCADE
+);
+
+create table if not exists REVIEWS
+(
+    REVIEW_ID           INTEGER auto_increment
+        primary key,
+    CONTENT         CHARACTER VARYING(100) not null,
+    IS_POSITIVE BOOLEAN,
+    USER_ID INTEGER,
+    FILM_ID     INTEGER,
+    USEFUL         INTEGER DEFAULT 0,
+    constraint FILMS_REVIEWS_FK
+        foreign key (FILM_ID) references FILMS ON DELETE CASCADE,
+    constraint USERS_REVIEWS_FK
+        foreign key (USER_ID) references USERS ON DELETE CASCADE
+);
+
+create table if not exists REVIEWS_RATES
+(
+    REVIEW_ID INTEGER not null,
+    USER_ID INTEGER not null,
+    RATE CHARACTER VARYING(10),
+    primary key (REVIEW_ID, USER_ID),
+    constraint USER_REVIEWS_RATES_FK
+        foreign key (USER_ID) references USERS ON DELETE CASCADE,
+    constraint REVIEW_REVIEWS_RATES_FK
+        foreign key (REVIEW_ID) references REVIEWS ON DELETE CASCADE
 );

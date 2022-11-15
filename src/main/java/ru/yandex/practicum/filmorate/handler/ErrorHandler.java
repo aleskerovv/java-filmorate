@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import ru.yandex.practicum.filmorate.exceptions.DuplicateEventException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 
 import java.util.HashMap;
@@ -30,10 +31,25 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         return errors;
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DuplicateEventException.class)
+    protected String handleDuplicateEventException(DuplicateEventException ex) {
+        log.error(ex.getMessage());
+        return ex.getMessage();
+    }
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(IllegalArgumentException.class)
-    protected String handleResourceNotFoundException(
+    protected String handleIllegalArgumentException(
             IllegalArgumentException ex) {
+        log.error(ex.getMessage());
+        return ex.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(UnsupportedOperationException.class)
+    protected String handleUnsupportedOperationException(
+            UnsupportedOperationException ex) {
         log.error(ex.getMessage());
         return ex.getMessage();
     }

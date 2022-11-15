@@ -2,7 +2,10 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,7 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@Sql(scripts = {"file:src/test/resources/test-schema.sql", "file:src/test/resources/test-data-users-films.sql"})
+@Sql(scripts = {"file:src/test/resources/test-schema.sql",
+        "file:src/test/resources/test-data-users-films.sql"})
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -150,7 +154,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void when_FilmsId_isNegative_andStatusIs400() throws Exception {
+    void when_FilmsId_isNegative_andStatusIs404() throws Exception {
         Film f = new Film();
         f.setId(-1);
         f.setName("Test film");
@@ -162,11 +166,7 @@ class FilmControllerTest {
                         put("/films")
                                 .content(objectMapper.writeValueAsString(f))
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
-                        instanceof IllegalArgumentException))
-                .andExpect(result -> assertEquals("id cannot be negative",
-                        result.getResponse().getContentAsString()));
+                ).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -218,13 +218,73 @@ class FilmControllerTest {
                 .andExpect(jsonPath("$.*", hasSize(1)))
                 .andExpect(jsonPath("$..description").value("test desc of third film"));
     }
-//
-//    @Test
-//    void deleteAllFilms() throws Exception {
-//        mockMvc.perform(delete("/films"))
-//                .andExpect(status().isOk());
-//        mockMvc.perform(get("/films"))
-//                .andExpect(jsonPath("$.*", hasSize(0)));
-//
-//    }
+
+    @Test
+    @DisplayName("Check that film was found with correct reqParams")
+    void getFoundFilmsWithCorrectByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=film&by=title"))
+                .andExpect(jsonPath("$.*", hasSize(3)));
+    }
+
+    @Test
+    @DisplayName("Check that film was found with correct list of reqParams")
+    void getFoundFilmsWithCorrectListOfByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=st&by=title,director"))
+                .andExpect(jsonPath("$.*", hasSize(1)));
+    }
+
+    @Test
+    @DisplayName("Check that film was not found with incorrect reqParams")
+    void getFoundFilmsWithIncorrectByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=film&by=query"))
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("incorrect filter type",
+                        result.getResponse().getContentAsString()));
+    }
+
+    @ParameterizedTest()
+    @ValueSource(strings = {"", "    "})
+    @DisplayName("Check that film was not found with blank query")
+    void getFoundFilmsWithBlankOrEmptyQueryParam(String param) throws Exception {
+        mockMvc.perform(get("/films/search?query=" + param + "&by=query"))
+                .andExpect(jsonPath("$.*", hasSize(3)));
+    }
+
+    @Test
+    @DisplayName("Check that film was found without reqParams")
+    void getFoundFilmsWithoutByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=film&by=title"))
+                .andExpect(jsonPath("$.*", hasSize(3)));
+    }
+
+    @Test
+    @DisplayName("Check that film was not found with incorrect list of reqParams")
+    void getFoundFilmsWithIncorrectListOfByParam() throws Exception {
+        mockMvc.perform(get("/films/search?query=st&by=title,director222"))
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException()
+                        instanceof IllegalArgumentException))
+                .andExpect(result -> assertEquals("incorrect filter type",
+                        result.getResponse().getContentAsString()));
+    }
+
+    @Test
+    @DisplayName("Check that common film was found")
+    void getCommonFilms() throws Exception {
+        mockMvc.perform(put("/films/3/like/1"))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/films/3/like/2"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/films/common?userId=1&friendId=2"))
+                .andExpect(jsonPath("$.*", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(3));
+    }
+
+    @Test
+    @DisplayName("Check that common film was not found")
+    void getEmptyCommonFilms() throws Exception {
+        mockMvc.perform(get("/films/common?userId=1&friendId=2"))
+                .andExpect(jsonPath("$.*", hasSize(0)));
+    }
 }

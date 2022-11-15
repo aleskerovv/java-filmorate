@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
-@Sql(scripts = {"file:src/main/resources/schema.sql", "file:src/main/resources/data.sql"})
+@Sql(scripts = {"file:src/test/resources/test-schema.sql", "file:src/test/resources/test-data-users-films.sql"})
 class MpaControllerTest {
     @Autowired
     private MockMvc mockMvc;

@@ -2,16 +2,19 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Length;
-import ru.yandex.practicum.filmorate.annotations.CorrectReleaseDay;
+import ru.yandex.practicum.filmorate.annotations.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Data
+@Accessors(chain = true)
 public class Film {
     @PositiveOrZero(message = "must be positive")
     private int id;
@@ -26,8 +29,9 @@ public class Film {
     private Integer rate;
     @NonNull
     private MpaCategory mpa = new MpaCategory();
-    private Set<Genre> genres = new HashSet<>();
+    private Set<Genre> genres = new TreeSet<>();
     private Set<Integer> likes = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
 
     public void addLike(Integer id) {
         likes.add(id);
@@ -35,5 +39,9 @@ public class Film {
 
     public void deleteLike(Integer id) {
         likes.remove(id);
+    }
+
+    public void setGenres(Set<Genre> genres) {
+        this.genres = new TreeSet<>(genres);
     }
 }
