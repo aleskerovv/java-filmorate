@@ -33,4 +33,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: java-filmorate:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/java-filmorate:latest
