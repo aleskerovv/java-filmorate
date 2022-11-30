@@ -1,5 +1,5 @@
 FROM adoptopenjdk/openjdk11:ubi
-#ARG JAR_FILE=target/filmorate-0.0.1-SNAPSHOT.jar
+ARG JAR_FILE=target/*.jar
 WORKDIR /opt/app
-COPY filmorate-0.0.1-SNAPSHOT.jar app.jar
+COPY ${JAR_FILE} app.jar
 ENTRYPOINT ["java","-jar","app.jar"]
