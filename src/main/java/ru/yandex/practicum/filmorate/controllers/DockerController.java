@@ -10,6 +10,6 @@ public class DockerController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public String helloDocker() {
-        return "Hello from Docker";
+        return "Hello from Docker updated";
     }
 }
