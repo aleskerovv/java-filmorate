@@ -10,6 +10,6 @@ public class DockerController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public String helloDocker() {
-        return "Hello from Docker updated another new version";
+        return "Hello from Docker updated another new version and added ci/cd pipeline check";
     }
 }
