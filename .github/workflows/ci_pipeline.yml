@@ -6,7 +6,7 @@ on:
       - "add-cicd"
 
 env:
-  CHECK_VERSION: "mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout"
+  CHECK_VERSION: mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout
 
 jobs:
   build:
@@ -42,4 +42,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/java-filmorate:${{steps.version.outputs}}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/java-filmorate:${{steps.newversion.outputs.VERSION}}
